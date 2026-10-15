@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>V-BETS Technical Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 20mm 18mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    line-height: 1.6;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 20pt;
+    color: #0d47a1;
+    border-bottom: 2px solid #0d47a1;
+    padding-bottom: 6px;
+    margin-top: 0;
+    margin-bottom: 4px;
+  }
+  h2 {
+    font-size: 14pt;
+    color: #1565c0;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 4px;
+    margin-top: 18pt;
+    margin-bottom: 8pt;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    color: #283593;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+    page-break-after: avoid;
+  }
+  p, li {
+    text-align: justify;
+    margin-top: 4pt;
+    margin-bottom: 6pt;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10pt;
+    margin-bottom: 14pt;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cfd8dc;
+    padding: 6pt 8pt;
+    text-align: left;
+  }
+  th {
+    background-color: #eceff1;
+    font-weight: 600;
+    color: #263238;
+  }
+  tr:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+  code {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 9.5pt;
+    background-color: #f1f3f4;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  pre {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 8pt;
+    font-size: 9pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+  }
+  blockquote {
+    border-left: 4px solid #1976d2;
+    margin: 10pt 0;
+    padding: 6pt 12pt;
+    background-color: #e3f2fd;
+    color: #0d47a1;
+  }
+  hr {
+    border: 0;
+    border-top: 1px solid #e0e0e0;
+    margin: 16pt 0;
+  }
+</style>
+</head>
+<body>
+<h1>V-BETS: Voice-Based Emergency Triage System</h1>
+<h2>Academic Capstone Technical Report</h2>
+<p><strong>Author:</strong> S.K. Thyakeshwar<br />
+<strong>Institution:</strong> Vellore Institute of Technology<br />
+<strong>Repository:</strong> <a href="https://github.com/thyakeshwarsk2023/vbets">https://github.com/thyakeshwarsk2023/vbets</a><br />
+<strong>Date:</strong> October 2026  </p>
+<hr />
+<h2>Executive Summary</h2>
+<p>Emergency department overcrowding and triage delays pose significant clinical risks. The Voice-Based Emergency Triage System (<strong>V-BETS</strong>) is an academic decision-support prototype designed to intake voice or typed natural language patient complaints, perform lexical speech-to-text transcription, and categorize urgency into three standard operational tiers: <strong>RED (Critical)</strong>, <strong>YELLOW (Urgent)</strong>, and <strong>GREEN (General)</strong>.</p>
+<p>V-BETS implements a hybrid architecture coupling a lightweight Bag-of-Words Multi-Layer Perceptron (BoW MLP) with a deterministic safety-net rule layer and confidence-based escalation logic. On an independent, unseen test set ($N=45$) featuring rambling conversational transcripts, speech recognition typos, and borderline clinical scenarios, the pure neural classifier attained 84.44% accuracy with 93.33% RED recall. When combined with the deterministic safety layer, the production pipeline achieved <strong>100.00% RED recall (15/15 critical cases detected)</strong> and <strong>86.67% overall accuracy</strong>, effectively preventing catastrophic under-triage failures.</p>
+<hr />
+<h2>1. Introduction &amp; Problem Statement</h2>
+<p>Triage is the foundational sorting mechanism in emergency healthcare, establishing clinical priority based on illness acuity rather than arrival order. Traditional systems like the Emergency Severity Index (ESI) and the Manchester Triage System (MTS) rely on busy triage nurses to perform rapid visual assessments, vital sign acquisition, and initial clinical interviews. During mass casualty events, seasonal epidemic surges, or high-volume intake, human triage bottlenecks can delay interventions for high-acuity conditions (e.g., stroke, myocardial infarction, anaphylaxis, severe sepsis).</p>
+<p>V-BETS explores how natural language processing (NLP) and shallow neural networks can serve as an accessible pre-intake screening interface. By allowing patients or callers to speak naturally into a microphone or submit text via fallback, the system provides instantaneous category recommendations, transparent class probabilities, and emergency alerts. </p>
+<p>Crucially, in medical triage, the cost of an <strong>under-triage error</strong> (classifying a RED life-threat as YELLOW or GREEN) is catastrophic, whereas <strong>over-triage</strong> (classifying a stable patient as critical) primarily incurs operational inconvenience. V-BETS is engineered around this asymmetric penalty structure.</p>
+<hr />
+<h2>2. Dataset Methodology &amp; Analysis</h2>
+<h3>2.1 Dataset Construction</h3>
+<p>The dataset <a href="data/triage_dataset.csv"><code>data/triage_dataset.csv</code></a> was authored as a synthetic corpus of natural language descriptions of medical emergencies, acute injuries, and routine outpatient inquiries. Rather than scraping uncurated clinical notes, sentences were hand-crafted to represent diverse colloquial speech patterns, layperson symptom descriptions (<em>"like an elephant sitting on my chest"</em>, <em>"throat closing"</em>), and clinic administrative queries (<em>"renew prescription"</em>, <em>"parking hours"</em>).</p>
+<h3>2.2 Corpus Distribution &amp; Stratification</h3>
+<p>Following targeted dataset augmentation to resolve cardiac and traumatic ambiguity, the corpus contains <strong>371 labeled sentences</strong>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Triage Class</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: center;">Sample Count</th>
+<th style="text-align: center;">Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">🔴 <strong>RED</strong></td>
+<td style="text-align: left;">Immediate life-threat / airway, breathing, circulation collapse</td>
+<td style="text-align: center;">133</td>
+<td style="text-align: center;">35.85%</td>
+</tr>
+<tr>
+<td style="text-align: left;">🟡 <strong>YELLOW</strong></td>
+<td style="text-align: left;">Urgent medical condition requiring care within 1 hour</td>
+<td style="text-align: center;">115</td>
+<td style="text-align: center;">31.00%</td>
+</tr>
+<tr>
+<td style="text-align: left;">🟢 <strong>GREEN</strong></td>
+<td style="text-align: left;">Non-urgent inquiries, routine consultations, scheduling</td>
+<td style="text-align: center;">123</td>
+<td style="text-align: center;">33.15%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><strong>371</strong></td>
+<td style="text-align: center;"><strong>100.0%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The data is partitioned using a random seed (<code>SEED = 42</code>) into an <strong>80/20 stratified train/test split</strong>:
+- <strong>Training Set ($N=296$)</strong>: 106 RED, 92 YELLOW, 98 GREEN.
+- <strong>Held-out Test Set ($N=75$)</strong>: 27 RED, 23 YELLOW, 25 GREEN.</p>
+<h3>2.3 Vocabulary &amp; Leakage Prevention</h3>
+<p>To ensure strict absence of data leakage, the vocabulary is built <strong>exclusively from the 296 training samples</strong>. The vocabulary comprises <strong>701 unique lemmatized tokens</strong>. Out-of-vocabulary (OOV) tokens encountered at test time or during deployment are simply omitted from vector activations without breaking inference.</p>
+<h3>2.4 Independent Unseen Evaluation Set (<code>data/unseen_test.csv</code>)</h3>
+<p>To evaluate out-of-distribution robustness, an independent evaluation set of <strong>45 completely new sentences</strong> (15 RED, 15 YELLOW, 15 GREEN) was generated.
+- <strong>Deduplication Check</strong>: Programmatically audited against the training set with 0 exact matches, a maximum token Jaccard similarity of 0.304, and a maximum TF-IDF cosine similarity of 0.433.
+- <strong>Stylistic Variations</strong>: Includes unpunctuated voice transcriptions, rambling narratives, speech recognition phonetic typos (<em>"colapsed"</em>, <em>"blisteres"</em>, <em>"tempreture"</em>), and 5 deliberately ambiguous borderline cases.</p>
+<hr />
+<h2>3. System Methodology &amp; Pipeline</h2>
+<p>The V-BETS inference pipeline operates across five coordinated stages:</p>
+<pre><code>[Audio Input (Mic)] ──&gt; [Google Speech API] ──&gt; [Normalized Text]
+                                                        │
+[Text Input (Fallback)] ────────────────────────────────┘
+                                │
+                    [Tokenization &amp; Lemmatization]
+                                │
+                    [Bag-of-Words Vector (701-d)]
+                                │
+                    [Keras BoW MLP (Softmax)]
+                                │
+              ┌─────────────────┴─────────────────┐
+              ▼                                   ▼
+    [Predicted Class Probabilities]     [Deterministic Rule Layer]
+              │                                   │
+              └─────────────────┬─────────────────┘
+                                ▼
+                  [Final Triage Classification]
+                  (RED / YELLOW / GREEN + Alerts)
+</code></pre>
+<h3>3.1 Speech Recognition &amp; Fallback</h3>
+<p>Voice audio is captured through the browser using the <code>streamlit-mic-recorder</code> WebRTC component at 16 kHz WAV format. Transcriptions are generated via the <code>SpeechRecognition</code> library interfacing with the Google Web Speech API. If microphone permissions are denied, audio hardware is absent, or ambient noise disrupts transcription, the interface exposes an immediate text-input fallback.</p>
+<h3>3.2 NLP Preprocessing Pipeline (<code>preprocess.py</code>)</h3>
+<ol>
+<li><strong>Normalization</strong>: Lowercases strings, removes extraneous whitespace, and normalizes contractions (e.g., <em>"won't"</em> $\rightarrow$ <em>"will not"</em>, <em>"can't"</em> $\rightarrow$ <em>"cannot"</em>, <em>"i'm"</em> $\rightarrow$ <em>"i am"</em>).</li>
+<li><strong>Tokenization</strong>: Regular expression pattern matching extracts alphabetical word segments (<code>[a-z]+</code>), removing punctuation and non-lexical symbols.</li>
+<li><strong>Double Lemmatization</strong>: Utilizes NLTK's <code>WordNetLemmatizer</code> with successive verb and noun passes (<code>_lem.lemmatize(_lem.lemmatize(w, "v"), "n")</code>). This collapses inflected forms (e.g., <em>"bleeding"</em> $\rightarrow$ <em>"bleed"</em>, <em>"vomited"</em> $\rightarrow$ <em>"vomit"</em>, <em>"babies"</em> $\rightarrow$ <em>"baby"</em>).</li>
+<li><strong>Vectorization</strong>: Transforms preprocessed tokens into a binary multi-hot Bag-of-Words vector $\mathbf{x} \in {0, 1}^{701}$.</li>
+</ol>
+<h3>3.3 Hybrid Safety Layer &amp; Confidence Thresholding</h3>
+<p>To counteract the inherent vulnerability of pure statistical classifiers to severe under-triage, V-BETS wraps model inference in two safety mechanisms:</p>
+<ol>
+<li><strong>Red-Flag Rule Layer</strong>: A deterministic list of emergency keywords (<code>RED_FLAGS</code>):
+   <code>"cannot breath"</code>, <code>"not breath"</code>, <code>"unconscious"</code>, <code>"unconsious"</code>, <code>"unresponsive"</code>, <code>"not responding"</code>, <code>"heart attack"</code>, <code>"having a stroke"</code>, <code>"seizure"</code>, <code>"choking"</code>, <code>"overdose"</code>, <code>"will not stop bleeding"</code>, <code>"bleeding heavily"</code>, <code>"kill myself"</code>, <code>"end my life"</code>, <code>"suicid"</code>, <code>"no pulse"</code>, <code>"no heartbeat"</code>, <code>"turning blue"</code>.
+   If any red-flag phrase is matched in the normalized input, the decision is automatically escalated to <strong>RED</strong>, appending an explicit provenance note.</li>
+<li><strong>Low-Confidence Escalation</strong>: If the model predicts <strong>GREEN</strong> but the maximum softmax probability falls below 50% ($\max(P) &lt; 0.50$), the complaint is automatically bumped to <strong>YELLOW</strong> to prevent borderline acute cases from being triaged to routine outpatient care.</li>
+</ol>
+<hr />
+<h2>4. Model Architectures</h2>
+<p>Two deep learning architectures were developed and trained: the primary deployed <strong>BoW MLP</strong> and an <strong>Embedding Model</strong> developed for comparative benchmarking.</p>
+<h3>4.1 Model A: Bag-of-Words Multi-Layer Perceptron (Deployed)</h3>
+<p>Designed for sub-millisecond CPU inference and zero footprint overhead:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Layer</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: center;">Output Shape</th>
+<th style="text-align: center;">Parameters</th>
+<th style="text-align: left;">Activation / Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">Input</td>
+<td style="text-align: center;"><code>(None, 701)</code></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">Binary multi-hot BoW vector</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">Dense</td>
+<td style="text-align: center;"><code>(None, 64)</code></td>
+<td style="text-align: center;">44,928</td>
+<td style="text-align: left;">ReLU</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">Dropout</td>
+<td style="text-align: center;"><code>(None, 64)</code></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">$p = 0.50$</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td style="text-align: left;">Dense</td>
+<td style="text-align: center;"><code>(None, 32)</code></td>
+<td style="text-align: center;">2,080</td>
+<td style="text-align: left;">ReLU</td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td style="text-align: left;">Dropout</td>
+<td style="text-align: center;"><code>(None, 32)</code></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">$p = 0.30$</td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td style="text-align: left;">Dense (Output)</td>
+<td style="text-align: center;"><code>(None, 3)</code></td>
+<td style="text-align: center;">99</td>
+<td style="text-align: left;">Softmax</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Total</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>47,107</strong></td>
+<td style="text-align: left;"><strong>File size: 595 KB (0.57 MB)</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Optimization</strong>: Adam ($\beta_1=0.9, \beta_2=0.999$), loss: sparse categorical cross-entropy.</li>
+<li><strong>Regularization</strong>: Balanced class weights (<code>cw</code>), EarlyStopping on validation loss (patience 15 epochs, best weights restored), batch size: 16.</li>
+</ul>
+<h3>4.2 Model B: Sequence Embedding Model (Comparative Benchmark)</h3>
+<p>Evaluates whether word-order sequence representations outperform sparse multi-hot representations on small datasets:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Layer</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: center;">Output Shape</th>
+<th style="text-align: center;">Parameters</th>
+<th style="text-align: left;">Activation / Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">Input</td>
+<td style="text-align: center;"><code>(None, 30)</code></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">Integer sequence (padded/truncated)</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">Embedding</td>
+<td style="text-align: center;"><code>(None, 30, 32)</code></td>
+<td style="text-align: center;">22,464</td>
+<td style="text-align: left;">Vocab size $702 \times 32$</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">GlobalAvgPool1D</td>
+<td style="text-align: center;"><code>(None, 32)</code></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">Temporal average pooling</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td style="text-align: left;">Dense</td>
+<td style="text-align: center;"><code>(None, 32)</code></td>
+<td style="text-align: center;">1,056</td>
+<td style="text-align: left;">ReLU</td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td style="text-align: left;">Dropout</td>
+<td style="text-align: center;"><code>(None, 32)</code></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">$p = 0.40$</td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td style="text-align: left;">Dense (Output)</td>
+<td style="text-align: center;"><code>(None, 3)</code></td>
+<td style="text-align: center;">99</td>
+<td style="text-align: left;">Softmax</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Total</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>23,619</strong></td>
+<td style="text-align: left;">Benchmark comparison model</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Experimental Results &amp; Discussion</h2>
+<p><em>All metrics and numbers reported below are empirical values extracted directly from the system logs (<code>reports/train_run1.txt</code>, <code>reports/train_run2.txt</code>, <code>reports/unseen_eval_run2b.txt</code>, and <code>model/metrics.json</code>).</em></p>
+<h3>5.1 Held-Out Test Set Performance ($N=75$)</h3>
+<pre><code>=== BoW MLP Confusion Matrix (Held-out N=75) ===
+               Predicted RED   Predicted YELLOW   Predicted GREEN
+True RED            24                 3                 0
+True YELLOW          2                20                 1
+True GREEN           0                 1                24
+</code></pre>
+<h4>Detailed Held-out Metrics Table:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Model Architecture</th>
+<th style="text-align: center;">Class</th>
+<th style="text-align: center;">Precision</th>
+<th style="text-align: center;">Recall</th>
+<th style="text-align: center;">F1-Score</th>
+<th style="text-align: center;">Support</th>
+<th style="text-align: center;">Overall Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>BoW MLP</strong> <em>(Deployed)</em></td>
+<td style="text-align: center;"><strong>RED</strong></td>
+<td style="text-align: center;"><strong>0.9231</strong></td>
+<td style="text-align: center;"><strong>0.8889</strong></td>
+<td style="text-align: center;"><strong>0.9057</strong></td>
+<td style="text-align: center;">27</td>
+<td style="text-align: center;"><strong>90.67%</strong> (68/75)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><strong>YELLOW</strong></td>
+<td style="text-align: center;">0.8333</td>
+<td style="text-align: center;">0.8696</td>
+<td style="text-align: center;">0.8511</td>
+<td style="text-align: center;">23</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><strong>GREEN</strong></td>
+<td style="text-align: center;">0.9600</td>
+<td style="text-align: center;">0.9600</td>
+<td style="text-align: center;">0.9600</td>
+<td style="text-align: center;">25</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><em>Macro Avg</em></td>
+<td style="text-align: center;">0.9055</td>
+<td style="text-align: center;">0.9062</td>
+<td style="text-align: center;">0.9056</td>
+<td style="text-align: center;">75</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Embedding Model</strong></td>
+<td style="text-align: center;"><strong>RED</strong></td>
+<td style="text-align: center;"><strong>0.9286</strong></td>
+<td style="text-align: center;"><strong>0.9630</strong></td>
+<td style="text-align: center;"><strong>0.9455</strong></td>
+<td style="text-align: center;">27</td>
+<td style="text-align: center;"><strong>93.33%</strong> (70/75)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><strong>YELLOW</strong></td>
+<td style="text-align: center;">0.9091</td>
+<td style="text-align: center;">0.8696</td>
+<td style="text-align: center;">0.8889</td>
+<td style="text-align: center;">23</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><strong>GREEN</strong></td>
+<td style="text-align: center;">0.9600</td>
+<td style="text-align: center;">0.9600</td>
+<td style="text-align: center;">0.9600</td>
+<td style="text-align: center;">25</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><em>Macro Avg</em></td>
+<td style="text-align: center;">0.9326</td>
+<td style="text-align: center;">0.9308</td>
+<td style="text-align: center;">0.9314</td>
+<td style="text-align: center;">75</td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+<p>The Embedding Model achieved higher held-out accuracy (93.33% vs 90.67%) due to its dense continuous representation, but the BoW MLP was deployed because its sparse activations pair reliably with the keyword-based deterministic safety layer.</p>
+<hr />
+<h3>5.2 Independent Unseen Test Set Evaluation ($N=45$)</h3>
+<p>Testing against the out-of-distribution evaluation set demonstrates the concrete clinical benefit of the hybrid rule layer:</p>
+<pre><code>=== Production Pipeline Confusion Matrix (Unseen N=45) ===
+               Predicted RED   Predicted YELLOW   Predicted GREEN
+True RED            15                 0                 0
+True YELLOW          3                12                 0
+True GREEN           1                 2                12
+</code></pre>
+<h4>Comparative Performance on Unseen Evaluation Set:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: center;">Run 1 (Model Alone)</th>
+<th style="text-align: center;">Run 2 (Model Alone)</th>
+<th style="text-align: center;">Run 2b (Full Pipeline + Rules)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Overall Accuracy</strong></td>
+<td style="text-align: center;">88.89% (40/45)</td>
+<td style="text-align: center;">84.44% (38/45)</td>
+<td style="text-align: center;"><strong>86.67% (39/45)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>RED Recall</strong></td>
+<td style="text-align: center;">93.33% (14/15)</td>
+<td style="text-align: center;">93.33% (14/15)</td>
+<td style="text-align: center;"><strong>100.00% (15/15)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>RED Precision</strong></td>
+<td style="text-align: center;">87.50% (14/16)</td>
+<td style="text-align: center;">77.78% (14/18)</td>
+<td style="text-align: center;">78.95% (15/19)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>YELLOW Recall</strong></td>
+<td style="text-align: center;">86.67% (13/15)</td>
+<td style="text-align: center;">80.00% (12/15)</td>
+<td style="text-align: center;">80.00% (12/15)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GREEN Recall</strong></td>
+<td style="text-align: center;">86.67% (13/15)</td>
+<td style="text-align: center;">80.00% (12/15)</td>
+<td style="text-align: center;">80.00% (12/15)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Critical Under-triages</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><strong>0 (Zero)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>5.3 Detailed Discussion of Model Errors</h3>
+<p>Analyzing individual failure cases exposes the mechanical realities of bag-of-words text classification:</p>
+<ol>
+<li><strong>Failure of Negation Scope (Sample #45)</strong>:</li>
+<li><em>Text</em>: <code>"i spent the weekend gardening and my lower back feels stiff and achy when i bend down but i have no shooting pain numbness or weakness in my legs"</code></li>
+<li><em>True Label</em>: <strong>GREEN</strong> | <em>Predicted</em>: <strong>YELLOW</strong> ($P(\text{YELLOW})=0.9130$).</li>
+<li><em>Analysis</em>: In Bag-of-Words, word order is discarded. The presence of <em>no</em> cannot grammatically bind to <em>shooting</em>, <em>pain</em>, <em>numbness</em>, and <em>weakness</em>. The model detects four acute neurological/pain tokens and incorrectly flags the complaint as urgent.</li>
+<li><strong>Lexical Keyword Conflation (Sample #32)</strong>:</li>
+<li><em>Text</em>: <code>"hello i need to get my monthly maintenance blood pressure medication refilled because my bottle has only two pills left"</code></li>
+<li><em>True Label</em>: <strong>GREEN</strong> | <em>Predicted</em>: <strong>RED</strong> ($P(\text{RED})=0.9650$).</li>
+<li><em>Analysis</em>: Because training sentences added for overdose included <em>"drank a bottle of pills"</em> and <em>"prescription sleeping medication"</em>, the tokens <em>bottle</em> and <em>medication</em> acquired strong positive weights in the RED output neuron, pulling an administrative refill query into emergency escalation.</li>
+<li><strong>The Lifesaving Rule Override (Sample #13)</strong>:</li>
+<li><em>Text</em>: <code>"my brother was working on electrical wiring in the garage and took a high voltage shock he fell backward and is completely limp with no heartbeat that i can feel"</code></li>
+<li><em>True Label</em>: <strong>RED</strong> | <em>Model Alone</em>: <strong>YELLOW</strong> ($P(\text{YELLOW})=0.7967$) | <em>Production Pipeline</em>: <strong>RED</strong>.</li>
+<li><em>Analysis</em>: Because words like <em>fell</em>, <em>backward</em>, and <em>garage</em> are heavily correlated with orthopedic injuries in the training corpus, the raw neural network suffered a life-threatening under-triage error. However, the deterministic rule layer intercepted <code>"no heartbeat"</code> and instantly forced an override to RED.</li>
+</ol>
+<hr />
+<h2>6. System Deployment &amp; Live Infrastructure</h2>
+<p>V-BETS is packaged as a cloud-ready Streamlit web service hosted on Streamlit Community Cloud.</p>
+<pre><code class="language-mermaid">graph TD
+    User([User Voice or Typed Input]) --&gt; UI[Streamlit Web Frontend]
+    UI --&gt;|Record Voice| Mic[streamlit-mic-recorder WebRTC]
+    UI --&gt;|Direct Text| Fallback[Text Input Fallback]
+    Mic --&gt;|WAV Bytes| SR[SpeechRecognition + Google Speech API]
+    SR --&gt; Text[Transcribed Complaint]
+    Fallback --&gt; Text
+    Text --&gt; Preprocess[Tokenization &amp; Lemmatization]
+    Preprocess --&gt; BoW[701-d BoW Vector]
+    BoW --&gt; Keras[Keras BoW MLP]
+    Keras --&gt; Probs[Softmax Class Probabilities]
+    Text --&gt; RuleCheck{Red-Flag Phrase Detected?}
+    RuleCheck --&gt;|Yes| ForceRed[Force RED Escalation]
+    RuleCheck --&gt;|No| ConfCheck{Prob &lt; 0.50 &amp; GREEN?}
+    ConfCheck --&gt;|Yes| BumpYellow[Escalate to YELLOW]
+    ConfCheck --&gt;|No| Output[Final Category Display]
+    ForceRed --&gt; Output
+    BumpYellow --&gt; Output
+    Output --&gt; UI
+</code></pre>
+<ul>
+<li><strong>GitHub Repository</strong>: <a href="https://github.com/thyakeshwarsk2023/vbets">https://github.com/thyakeshwarsk2023/vbets</a></li>
+<li><strong>Deployment Platform</strong>: Streamlit Community Cloud (Python 3.11 runtime, headless Linux container).</li>
+<li><strong>Execution Command</strong>: <code>streamlit run app.py</code>.</li>
+</ul>
+<hr />
+<h2>7. Limitations &amp; Ethical Considerations</h2>
+<ol>
+<li><strong>Lexical Pattern Matching vs. Semantic Understanding</strong>:
+   The deployed model is a Bag-of-Words network. It learns unigram token associations, not deep semantic syntax. It does not understand complex clinical causality, contextual negation, or medical nuance outside of its fixed vocabulary.</li>
+<li><strong>Synthetic Data Constraints</strong>:
+   The dataset consists of 371 synthetic sentences. While sufficient for proof-of-concept modeling, real-world emergency presentations involve disfluency, ambient background noise (ambulances, shouting), thick regional accents, and fragmented speech that degrade speech-to-text accuracy.</li>
+<li><strong>Missing Clinical Covariates</strong>:
+   In actual emergency medicine, triage cannot be performed responsibly on text alone. Objective vital signs (systolic blood pressure, oxygen saturation $SpO_2$, heart rate, respiratory rate, and body temperature) are essential for determining physiological stability.</li>
+<li><strong>Monolingual Limitation</strong>:
+   The current implementation is restricted to English. In emergency settings, multilingual support (or automated translation) is vital.</li>
+<li><strong>Regulatory &amp; Non-Medical Device Notice</strong>:
+   V-BETS is strictly an academic research prototype. It is <strong>not</strong> an FDA/CE-certified medical device and must never be utilized as a substitute for certified emergency medical dispatchers or clinical personnel.</li>
+</ol>
+<hr />
+<h2>8. Conclusion</h2>
+<p>V-BETS demonstrates that a lightweight neural network (under 600 KB) combined with classical NLP lemmatization can provide real-time categorization of patient emergency descriptions. However, the study's central finding is that <strong>pure statistical machine learning models should not operate unconstrained in high-stakes clinical triage</strong>. </p>
+<p>By pairing an empirical Bag-of-Words MLP with a deterministic red-flag safety net and low-confidence escalation logic, the V-BETS production pipeline eliminated fatal false negatives, raising unseen RED recall from 93.33% to <strong>100.00%</strong>. This hybrid architecture highlights a practical path forward for AI decision-support tools: statistical models provide flexible classification, while deterministic rule layers safeguard patient safety.</p>
+</body>
+</html>
