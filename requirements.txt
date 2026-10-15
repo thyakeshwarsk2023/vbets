@@ -1,0 +1,10 @@
+streamlit==1.39.0
+streamlit-mic-recorder==0.0.8
+SpeechRecognition==3.10.4
+nltk==3.9.1
+tensorflow-cpu==2.17.0
+numpy<2.0
+pandas==2.2.2
+scikit-learn==1.5.2
+matplotlib==3.9.2
+pyarrow==17.0.0
