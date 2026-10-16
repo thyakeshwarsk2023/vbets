@@ -1,6 +1,6 @@
-2026-10-16 21:32:07.590664: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-2026-10-16 21:32:08.536898: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-2026-10-16 21:32:19.021284: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+2026-10-16 21:36:35.809544: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 21:36:36.651699: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 21:36:44.683597: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
 To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
 ======================================================================
 V-BETS INDEPENDENT UNSEEN TEST EVALUATION
@@ -52,6 +52,7 @@ Confusion Matrix (rows=True [RED, YELLOW, GREEN], cols=Pred [RED, YELLOW, GREEN]
  [ 0  0 15]]
 Low-confidence YELLOW->RED escalations: 0
   True RED among them: 0
+Low-confidence GREEN->YELLOW escalations: 0
   Prior GREEN-should-be-RED cases caught by this YELLOW rule: 0; such cases do not enter its branch.
   Raw GREEN / true RED cases in this set: 0
 
