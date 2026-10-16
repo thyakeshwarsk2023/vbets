@@ -5,14 +5,10 @@ import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
 from tensorflow import keras
 from preprocess import LABELS, bow_vector, normalize
+from safety_rules import RED_FLAGS, matched_red_flag
 
 st.set_page_config(page_title="V-BETS Triage Demo", page_icon="🚑", layout="centered")
 
-# Rule layer: explicit red-flag phrases always escalate to RED (safety net on top of the model)
-RED_FLAGS = ["cannot breath", "not breath", "unconscious", "unconsious", "unresponsive",
-             "not responding", "heart attack", "having a stroke", "seizure", "choking",
-             "overdose", "will not stop bleeding", "bleeding heavily", "kill myself",
-             "end my life", "suicid", "no pulse", "no heartbeat", "turning blue"]
 CONF_THRESHOLD = 0.50
 
 RESPONSES = {
@@ -38,8 +34,7 @@ def load_assets():
 def classify(text, model, vocab):
     probs = model.predict(bow_vector(text, vocab)[None, :], verbose=0)[0]
     label, note = LABELS[int(probs.argmax())], ""
-    norm = normalize(text)
-    if any(flag in norm for flag in RED_FLAGS):
+    if matched_red_flag(text):
         if label != "RED":
             note = "Escalated to RED by safety rule (red-flag phrase detected)."
         label = "RED"
