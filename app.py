@@ -5,6 +5,7 @@ from streamlit_mic_recorder import mic_recorder
 from tensorflow import keras
 from preprocess import LABELS
 from operational import append_decision_event, is_timeout_error, is_usable_transcript
+from safety_rules import RED_FLAGS  # Expose the reviewed policy list used by triage.py.
 from triage import classify_text
 
 st.set_page_config(page_title="V-BETS Triage Demo", page_icon="🚑", layout="centered")
