@@ -4,12 +4,11 @@ import streamlit as st
 import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
 from tensorflow import keras
-from preprocess import LABELS, bow_vector, normalize
+from preprocess import LABELS, preprocess
 from safety_rules import RED_FLAGS, matched_red_flag
+from triage import classify_text
 
 st.set_page_config(page_title="V-BETS Triage Demo", page_icon="🚑", layout="centered")
-
-CONF_THRESHOLD = 0.50
 
 RESPONSES = {
     "RED": ("🔴 RED – CRITICAL", "#c62828",
@@ -32,15 +31,7 @@ def load_assets():
 
 
 def classify(text, model, vocab):
-    probs = model.predict(bow_vector(text, vocab)[None, :], verbose=0)[0]
-    label, note = LABELS[int(probs.argmax())], ""
-    if matched_red_flag(text):
-        if label != "RED":
-            note = "Escalated to RED by safety rule (red-flag phrase detected)."
-        label = "RED"
-    elif probs.max() < CONF_THRESHOLD and label == "GREEN":
-        label, note = "YELLOW", "Low model confidence – escalated to YELLOW to be safe."
-    return label, probs, note
+    return classify_text(text, model, vocab)
 
 
 def transcribe(wav_bytes):
@@ -76,7 +67,8 @@ elif go and typed.strip():
     text = typed.strip()
 
 if text:
-    label, probs, note = classify(text, model, vocab)
+    result = classify(text, model, vocab)
+    label, probs, note = result["label"], result["probabilities"], result["note"]
     title, color, message, action = RESPONSES[label]
     anim = "animation: blink 1s infinite;" if label == "RED" else ""
     st.markdown(f"""

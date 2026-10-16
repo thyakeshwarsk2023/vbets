@@ -1,36 +1,19 @@
 """Evaluation of saved V-BETS BoW MLP on independent unseen test set (data/unseen_test.csv).
 Evaluates both the raw model and the complete production pipeline (model + red-flag rules + low-confidence escalation).
 """
+import argparse
 import json
 import numpy as np
 import pandas as pd
 from tensorflow import keras
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from preprocess import LABELS, bow_vector, normalize
-
-# Match app.py rule layer exactly
-RED_FLAGS = ["cannot breath", "not breath", "unconscious", "unconsious", "unresponsive",
-             "not responding", "heart attack", "having a stroke", "seizure", "choking",
-             "overdose", "will not stop bleeding", "bleeding heavily", "kill myself",
-             "end my life", "suicid", "no pulse", "no heartbeat", "turning blue"]
-CONF_THRESHOLD = 0.50
+from preprocess import LABELS
+from triage import GREEN_CONF_THRESHOLD, YELLOW_CONF_THRESHOLD, classify_text
 
 
 def classify_pipeline(text: str, model, vocab):
-    """Identical logic to app.py classify() function."""
-    probs = model.predict(bow_vector(text, vocab)[None, :], verbose=0)[0]
-    raw_label = LABELS[int(probs.argmax())]
-    label = raw_label
-    note = ""
-    norm = normalize(text)
-    if any(flag in norm for flag in RED_FLAGS):
-        if label != "RED":
-            note = "Escalated to RED by safety rule (red-flag phrase detected)."
-        label = "RED"
-    elif probs.max() < CONF_THRESHOLD and label == "GREEN":
-        label = "YELLOW"
-        note = "Low model confidence – escalated to YELLOW to be safe."
-    return label, raw_label, probs, note
+    """Shared production policy from triage.py."""
+    return classify_text(text, model, vocab)
 
 
 def main():
@@ -38,10 +21,15 @@ def main():
     print("V-BETS INDEPENDENT UNSEEN TEST EVALUATION")
     print("=" * 70)
 
-    # 1. Load assets
-    model = keras.models.load_model("model/triage_mlp.keras")
-    vocab = json.load(open("model/vocab.json"))
-    df = pd.read_csv("data/unseen_test.csv")
+    # 1. Load assets; defaults point at the current negation-aware model.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default="model/triage_mlp_v2.keras")
+    parser.add_argument("--vocab", default="model/vocab_v2.json")
+    parser.add_argument("--data", default="data/unseen_test.csv")
+    args = parser.parse_args()
+    model = keras.models.load_model(args.model)
+    vocab = json.load(open(args.vocab))
+    df = pd.read_csv(args.data)
     print(f"Loaded unseen test dataset: {len(df)} samples")
     print(f"Class distribution: {dict(df['label'].value_counts())}")
     print(f"Borderline samples: {df['borderline'].sum()} of {len(df)}\n")
@@ -53,7 +41,11 @@ def main():
         true_label = str(row["label"])
         borderline = bool(row["borderline"])
 
-        pipe_label, raw_label, probs, note = classify_pipeline(text, model, vocab)
+        result = classify_pipeline(text, model, vocab)
+        pipe_label = result["label"]
+        raw_label = result["raw_label"]
+        probs = result["probabilities"]
+        note = result["note"]
         records.append({
             "idx": idx + 1,
             "text": text,
@@ -62,6 +54,9 @@ def main():
             "pipe_pred": pipe_label,
             "probs": probs,
             "note": note,
+            "confidence": result["confidence"],
+            "matched_rule": result["matched_rule"],
+            "confidence_escalation": result["confidence_escalation"],
             "borderline": borderline,
             "correct_raw": raw_label == true_label,
             "correct_pipe": pipe_label == true_label,
@@ -99,6 +94,15 @@ def main():
     print(rep_pipe)
     print("Confusion Matrix (rows=True [RED, YELLOW, GREEN], cols=Pred [RED, YELLOW, GREEN]):")
     print(cm_pipe)
+
+    low_yellow = res_df[(res_df["raw_pred"] == "YELLOW") & (res_df["confidence"] < YELLOW_CONF_THRESHOLD)]
+    print(f"Low-confidence YELLOW->RED escalations: {len(low_yellow)}")
+    print("  True RED among them:", int((low_yellow["true_label"] == "RED").sum()))
+    low_green = res_df[(res_df["raw_pred"] == "GREEN") & (res_df["confidence"] < GREEN_CONF_THRESHOLD)]
+    print(f"Low-confidence GREEN->YELLOW escalations: {len(low_green)}")
+    low_green_red = res_df[(res_df["raw_pred"] == "GREEN") & (res_df["true_label"] == "RED")]
+    print("  Prior GREEN-should-be-RED cases caught by this YELLOW rule: 0; such cases do not enter its branch.")
+    print(f"  Raw GREEN / true RED cases in this set: {len(low_green_red)}")
 
     # 5. Rule Layer Impact Analysis
     escalations = res_df[res_df["raw_pred"] != res_df["pipe_pred"]]

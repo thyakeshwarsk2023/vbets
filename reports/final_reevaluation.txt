@@ -1,0 +1,38 @@
+2026-10-16 21:33:43.344392: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 21:33:44.195285: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 21:33:50.995139: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
+=== Original held-out (N=75) ===
+Baseline pipeline confusion matrix (rows=true, cols=pred [RED,YELLOW,GREEN]):
+[[24  3  0]
+ [ 2 20  1]
+ [ 0  1 24]]
+Baseline RED recall: 24/27 = 0.8889, 95% CI [0.7084, 0.9765]
+Baseline accuracy: 0.9067
+Current pipeline confusion matrix (rows=true, cols=pred [RED,YELLOW,GREEN]):
+[[25  2  0]
+ [ 1 21  1]
+ [ 0  1 24]]
+Current RED recall: 25/27 = 0.9259, 95% CI [0.7571, 0.9909]
+Current accuracy: 0.9333
+Current explicit RED-rule matches on non-RED truth: 0
+Low-confidence YELLOW->RED escalations: 0
+
+=== Unseen (N=45) ===
+Baseline pipeline confusion matrix (rows=true, cols=pred [RED,YELLOW,GREEN]):
+[[15  0  0]
+ [ 3 12  0]
+ [ 1  2 12]]
+Baseline RED recall: 15/15 = 1.0000, 95% CI [0.7820, 1.0000]
+Baseline accuracy: 0.8667
+Current pipeline confusion matrix (rows=true, cols=pred [RED,YELLOW,GREEN]):
+[[15  0  0]
+ [ 2 13  0]
+ [ 0  0 15]]
+Current RED recall: 15/15 = 1.0000, 95% CI [0.7820, 1.0000]
+Current accuracy: 0.9556
+Current explicit RED-rule matches on non-RED truth: 0
+Low-confidence YELLOW->RED escalations: 0
+Sample #32: true=GREEN baseline=RED current=GREEN rule=routine_prescription_request
+Sample #45: true=GREEN baseline=YELLOW current=GREEN rule=negated_mild_gardening_back_complaint
