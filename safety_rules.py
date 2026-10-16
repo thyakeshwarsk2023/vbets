@@ -1,5 +1,6 @@
 """Reviewed phrase rules for emergency escalation."""
 from preprocess import normalize
+import re
 
 
 # Keep additions phrase-specific; standalone tokens create avoidable false alarms.
@@ -32,7 +33,27 @@ RED_FLAGS = [
 ]
 
 
+INHERENT_EMERGENCY_FLAGS = {
+    "cannot breath", "not breath", "not responding", "no pulse", "no heartbeat",
+    "will not stop bleeding",
+}
+NEGATION_CUES = {"no", "not", "denies", "without", "never", "cannot"}
+NEGATION_WINDOW = 5
+
+
 def matched_red_flag(text):
-    """Return the first configured red-flag phrase found in normalized text."""
+    """Return a non-negated rule phrase, preserving inherent emergency wording."""
     norm = normalize(text)
-    return next((flag for flag in RED_FLAGS if normalize(flag) in norm), None)
+    tokens = list(re.finditer(r"[a-z]+", norm))
+    cue_positions = [i for i, match in enumerate(tokens) if match.group() in NEGATION_CUES]
+    for flag in RED_FLAGS:
+        phrase = normalize(flag)
+        start = norm.find(phrase)
+        if start < 0:
+            continue
+        phrase_token = next((i for i, match in enumerate(tokens) if match.start() >= start), len(tokens))
+        negated = any(0 <= phrase_token - cue <= NEGATION_WINDOW for cue in cue_positions)
+        if negated and flag not in INHERENT_EMERGENCY_FLAGS:
+            continue
+        return flag
+    return None

@@ -5,6 +5,9 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 
 LABELS = ["RED", "YELLOW", "GREEN"]
+USE_NEGATION_FEATURES = True
+NEGATION_CUES = {"no", "not", "denies", "without", "never", "cannot"}
+NEGATION_WINDOW = 5
 
 
 def ensure_nltk():
@@ -37,24 +40,39 @@ def lemmatize(tokens):
     return [_lem.lemmatize(_lem.lemmatize(w, "v"), "n") for w in tokens]
 
 
-def preprocess(text: str):
-    return lemmatize(tokenize(text))
+def preprocess(text: str, use_negation=None):
+    """Tokenize and lemmatize, optionally marking tokens in a negation scope.
+
+    Negation features are prefixed with ``NEG_`` and apply to the next five
+    tokens after a cue. ``cannot`` is included because normalize() expands
+    contractions such as "can't" to that form.
+    """
+    if use_negation is None:
+        use_negation = USE_NEGATION_FEATURES
+    words = lemmatize(tokenize(text))
+    if not use_negation:
+        return words
+    cue_positions = [i for i, word in enumerate(words) if word in NEGATION_CUES]
+    return [
+        f"NEG_{word}" if any(cue < i <= cue + NEGATION_WINDOW for cue in cue_positions) else word
+        for i, word in enumerate(words)
+    ]
 
 
-def build_vocab(texts):
-    words = sorted({w for t in texts for w in preprocess(t)})
+def build_vocab(texts, use_negation=None):
+    words = sorted({w for t in texts for w in preprocess(t, use_negation=use_negation)})
     return {w: i for i, w in enumerate(words)}
 
 
-def bow_vector(text: str, vocab: dict) -> np.ndarray:
+def bow_vector(text: str, vocab: dict, use_negation=None) -> np.ndarray:
     v = np.zeros(len(vocab), dtype="float32")
-    for w in preprocess(text):
+    for w in preprocess(text, use_negation=use_negation):
         if w in vocab:
             v[vocab[w]] = 1.0
     return v
 
 
-def seq_vector(text: str, vocab: dict, max_len: int = 30) -> np.ndarray:
+def seq_vector(text: str, vocab: dict, max_len: int = 30, use_negation=None) -> np.ndarray:
     """Word-index sequence for the Embedding model (0 = padding/unknown)."""
-    ids = [vocab[w] + 1 for w in preprocess(text) if w in vocab][:max_len]
+    ids = [vocab[w] + 1 for w in preprocess(text, use_negation=use_negation) if w in vocab][:max_len]
     return np.array(ids + [0] * (max_len - len(ids)), dtype="int32")
