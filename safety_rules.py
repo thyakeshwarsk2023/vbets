@@ -52,7 +52,9 @@ def matched_red_flag(text):
         if start < 0:
             continue
         phrase_token = next((i for i, match in enumerate(tokens) if match.start() >= start), len(tokens))
-        negated = any(0 <= phrase_token - cue <= NEGATION_WINDOW for cue in cue_positions)
+        # A negation word inside the emergency phrase itself (e.g. "can't get air",
+        # "not responding") describes the emergency; only a cue before it negates it.
+        negated = any(0 < phrase_token - cue <= NEGATION_WINDOW for cue in cue_positions)
         if negated and flag not in INHERENT_EMERGENCY_FLAGS:
             continue
         return flag
