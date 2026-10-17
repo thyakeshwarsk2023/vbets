@@ -26,8 +26,6 @@ def main():
     assert set(new.category) == {"C4_red_bleeding", "C5_yellow"}
     assert new.text.map(lambda x: str(x).strip().casefold()).nunique() == len(new)
 
-    # Exact-match-only duplicate check, including the locked fresh set. Do not compute
-    # lexical similarity or predictions against unseen_test_v2.csv here.
     new_norm = {str(x).strip().casefold() for x in new.text}
     prior_norm = set()
     for path in Path("data").glob("*.csv"):
@@ -44,7 +42,6 @@ def main():
     combined = pd.concat([base, new[["text", "label"]]], ignore_index=True)
     combined.to_csv("data/triage_dataset_v4.csv", index=False)
 
-    # Similarity is intentionally computed against the contaminated original unseen set only.
     unseen = pd.read_csv("data/unseen_test.csv").reset_index(drop=True)
     new_texts = new.text.astype(str).tolist()
     unseen_texts = unseen.text.astype(str).tolist()

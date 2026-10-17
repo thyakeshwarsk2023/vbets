@@ -1,6 +1,4 @@
-"""Evaluation of saved V-BETS BoW MLP on independent unseen test set (data/unseen_test.csv).
-Evaluates both the raw model and the complete production pipeline (model + red-flag rules + low-confidence escalation).
-"""
+"""Evaluation of saved V-BETS BoW MLP on independent unseen test set (data/unseen_test.csv)."""
 import argparse
 import json
 import numpy as np
@@ -21,7 +19,6 @@ def main():
     print("V-BETS INDEPENDENT UNSEEN TEST EVALUATION")
     print("=" * 70)
 
-    # 1. Load assets; defaults point at the current negation-aware model.
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="model/triage_mlp_v2.keras")
     parser.add_argument("--vocab", default="model/vocab_v2.json")
@@ -34,7 +31,6 @@ def main():
     print(f"Class distribution: {dict(df['label'].value_counts())}")
     print(f"Borderline samples: {df['borderline'].sum()} of {len(df)}\n")
 
-    # 2. Run inference
     records = []
     for idx, row in df.iterrows():
         text = str(row["text"])
@@ -67,7 +63,6 @@ def main():
     y_raw = res_df["raw_pred"].values
     y_pipe = res_df["pipe_pred"].values
 
-    # 3. Model Alone Results
     acc_raw = accuracy_score(y_true, y_raw)
     cm_raw = confusion_matrix(y_true, y_raw, labels=LABELS)
     rep_raw = classification_report(y_true, y_raw, labels=LABELS, zero_division=0)
@@ -81,7 +76,6 @@ def main():
     print("Confusion Matrix (rows=True [RED, YELLOW, GREEN], cols=Pred [RED, YELLOW, GREEN]):")
     print(cm_raw)
 
-    # 4. Full Pipeline Results
     acc_pipe = accuracy_score(y_true, y_pipe)
     cm_pipe = confusion_matrix(y_true, y_pipe, labels=LABELS)
     rep_pipe = classification_report(y_true, y_pipe, labels=LABELS, zero_division=0)
@@ -104,7 +98,6 @@ def main():
     print("  Prior GREEN-should-be-RED cases caught by this YELLOW rule: 0; such cases do not enter its branch.")
     print(f"  Raw GREEN / true RED cases in this set: {len(low_green_red)}")
 
-    # 5. Rule Layer Impact Analysis
     escalations = res_df[res_df["raw_pred"] != res_df["pipe_pred"]]
     print("\n" + "=" * 70)
     print(f"3. RULE LAYER ACTIVATIONS ({len(escalations)} samples escalated)")
@@ -118,7 +111,6 @@ def main():
             print(f"  Note: {r['note']}")
             print(f"  Probs: RED={r['probs'][0]:.4f}, YELLOW={r['probs'][1]:.4f}, GREEN={r['probs'][2]:.4f}")
 
-    # 6. Misclassified Sentences (Full Pipeline)
     mis_pipe = res_df[~res_df["correct_pipe"]]
     print("\n" + "=" * 70)
     print(f"4. MISCLASSIFIED SENTENCES IN FULL PIPELINE ({len(mis_pipe)} total errors)")
@@ -133,7 +125,6 @@ def main():
         if r["note"]:
             print(f"  Rule Action:     {r['note']}")
 
-    # 7. Misclassified Sentences (Model Alone)
     mis_raw = res_df[~res_df["correct_raw"]]
     print("\n" + "=" * 70)
     print(f"5. MISCLASSIFIED SENTENCES IN MODEL ALONE ({len(mis_raw)} total errors)")

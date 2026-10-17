@@ -27,8 +27,6 @@ def build_decision_event(text, result):
     probabilities = result["probabilities"]
     return {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        # Raw text is retained for this synthetic academic demo as requested.
-        # Production deployments must hash/encrypt this field and define retention.
         "input_text": text,
         "raw_prediction": result["raw_label"],
         "confidence_scores": {

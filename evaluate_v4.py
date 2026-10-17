@@ -82,7 +82,6 @@ def main():
                             sr["probabilities"] = [float(x) for x in probs[sample_no-1]]
             del model
 
-    # Config B split-seed comparison; fixed initialization seed 42 for each split.
     split_records = []
     for split_seed in SPLIT_SEEDS:
         tr_idx, te_idx = train_test_split(np.arange(len(original)), test_size=.2,

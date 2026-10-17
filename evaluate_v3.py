@@ -110,7 +110,6 @@ def main():
                 }
         print(f"Finished fixed-split {version}", flush=True)
 
-    # Config B seed robustness: same architecture, training recipe, and added rows.
     seed_results = {}
     for seed in SEEDS:
         print(f"Training seed robustness seed={seed}", flush=True)
@@ -133,7 +132,6 @@ def main():
             del model
             print(f"Finished seed={seed} {version}", flush=True)
 
-    # Format compact, auditable comparison artifact.
     lines = [
         "V-BETS v3 augmentation evaluation",
         "Labels/order: RED, YELLOW, GREEN. Confusion matrices use rows=true and columns=predicted.",

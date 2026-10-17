@@ -114,7 +114,6 @@ def main():
     for category, recs in categories.items():
         lines.append(f"Without {category}: Sample #10 correct raw {sum(r['raw']=='RED' for r in recs)}/5, general {sum(r['general']=='RED' for r in recs)}/5; mean held-out general RED recall {np.mean([r['held_red'] for r in recs]):.3f}; mean held-out accuracy {np.mean([r['held_acc'] for r in recs]):.3f}; mean unseen general RED recall {np.mean([r['unseen_red'] for r in recs]):.3f}.")
 
-    # Five nearest neighbors from the full v3 training partition (original 296 + all 36 additions).
     v3_train_text = train.text.astype(str).tolist() + aug.text.astype(str).tolist()
     v3_train_labels = train.label.astype(str).tolist() + aug.label.astype(str).tolist()
     vectorizer = TfidfVectorizer()
@@ -130,7 +129,6 @@ def main():
     lines.append("Sample #10 preprocessed tokens present in the v3 vocabulary: " + ", ".join(present))
     lines.append("Tokens absent from the v3 vocabulary: " + ", ".join(token for token in sample_features if token not in vocab))
 
-    # Interpret only what the observed fractions support.
     v3_ok = sum(r["raw_class"] == "RED" for r in init_results["v3"])
     v2_ok = sum(r["raw_class"] == "RED" for r in init_results["v2"])
     loco = {c: sum(r["raw"] == "RED" for r in rs) / 5 for c, rs in categories.items()}

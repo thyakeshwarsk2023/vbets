@@ -5,7 +5,7 @@ from streamlit_mic_recorder import mic_recorder
 from tensorflow import keras
 from preprocess import LABELS
 from operational import append_decision_event, is_timeout_error, is_usable_transcript
-from safety_rules import RED_FLAGS  # Expose the reviewed policy list used by triage.py.
+from safety_rules import RED_FLAGS
 from triage import classify_text
 
 st.set_page_config(page_title="V-BETS Emergency Triage", layout="centered")
@@ -36,7 +36,6 @@ def classify(text, model, vocab):
 
 def transcribe(wav_bytes, timeout_seconds=10):
     r = sr.Recognizer()
-    # SpeechRecognition applies this bound to its Google Web Speech API request.
     r.operation_timeout = timeout_seconds
     with sr.AudioFile(io.BytesIO(wav_bytes)) as src:
         audio = r.record(src)
@@ -111,7 +110,6 @@ if text is not None:
         if note:
             st.info(f"Policy Note: {note}")
 
-        # Probability distribution metrics
         st.markdown("**Model Class Probabilities:**")
         col1, col2, col3 = st.columns(3)
         col1.metric("RED (Critical)", f"{float(probs[0])*100:.1f}%")

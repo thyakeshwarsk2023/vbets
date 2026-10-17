@@ -41,12 +41,7 @@ def lemmatize(tokens):
 
 
 def preprocess(text: str, use_negation=None):
-    """Tokenize and lemmatize, optionally marking tokens in a negation scope.
-
-    Negation features are prefixed with ``NEG_`` and apply to the next five
-    tokens after a cue. ``cannot`` is included because normalize() expands
-    contractions such as "can't" to that form.
-    """
+    """Tokenize and lemmatize, optionally marking tokens in a negation scope."""
     if use_negation is None:
         use_negation = USE_NEGATION_FEATURES
     words = lemmatize(tokenize(text))

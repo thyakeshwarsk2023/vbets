@@ -1,6 +1,4 @@
-"""Train + evaluate the triage models. Run once locally:  python train.py
-Outputs: model/triage_mlp.keras, model/vocab.json, model/metrics.json, model/confusion_matrix.png
-"""
+"""Train + evaluate the triage models. Run once locally:  python train.py"""
 import argparse, json, os
 import numpy as np, pandas as pd
 import tensorflow as tf
@@ -34,7 +32,6 @@ df["y"] = df["label"].map({l: i for i, l in enumerate(LABELS)})
 train_df, test_df = train_test_split(df, test_size=0.2, stratify=df["y"], random_state=SPLIT_SEED)
 print(f"Train: {len(train_df)}  Test: {len(test_df)}")
 
-# Vocabulary is built from TRAINING data only (no leakage)
 vocab = build_vocab(train_df["text"], use_negation=USE_NEGATION)
 json.dump(vocab, open(vocab_path, "w"))
 
@@ -55,7 +52,6 @@ def evaluate(name, model, Xte):
     return rep, cm
 
 
-# ---- Model A: Bag-of-Words MLP (deployed) ------------------------------
 Xtr = np.stack([bow_vector(t, vocab, use_negation=USE_NEGATION) for t in train_df["text"]])
 Xte = np.stack([bow_vector(t, vocab, use_negation=USE_NEGATION) for t in test_df["text"]])
 mlp = keras.Sequential([
@@ -72,7 +68,6 @@ mlp.fit(Xtr, y_train, validation_split=0.15, epochs=150, batch_size=16,
 rep_a, cm_a = evaluate("BoW MLP (deployed)", mlp, Xte)
 mlp.save(model_path)
 
-# ---- Model B: Embedding model (comparison for the report) --------------
 Str = np.stack([seq_vector(t, vocab, use_negation=USE_NEGATION) for t in train_df["text"]])
 Ste = np.stack([seq_vector(t, vocab, use_negation=USE_NEGATION) for t in test_df["text"]])
 emb = keras.Sequential([

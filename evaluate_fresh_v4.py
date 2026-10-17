@@ -19,14 +19,12 @@ def red_ci(hits, total):
 
 
 def main():
-    # Load the two preselected artifacts before reading the locked test file.
     model_specs = {
         "selected_v4": (keras.models.load_model("model/triage_mlp_v4.keras"),
                         json.loads(Path("model/vocab_v4.json").read_text(encoding="utf-8"))),
         "baseline_v2": (keras.models.load_model("model/triage_mlp_v2.keras"),
                         json.loads(Path("model/vocab_v2.json").read_text(encoding="utf-8"))),
     }
-    # This is the sole read/evaluation pass of data/unseen_test_v2.csv.
     frame = pd.read_csv("data/unseen_test_v2.csv").reset_index(drop=True)
     texts = frame.text.astype(str).tolist()
     truth = frame.label.astype(str).tolist()

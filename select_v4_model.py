@@ -32,7 +32,6 @@ def main():
     eligible = [m for m in candidates if not stats[m]["stable_misses"]]
     highest = max(stats[m]["split_mean"] for m in eligible)
     within_one = [m for m in eligible if highest - stats[m]["split_mean"] <= 0.01]
-    # The specified tie breaks: fewer total RED misses across init runs, then v2.
     min_misses = min(stats[m]["total_init_red_misses"] for m in within_one)
     tied = [m for m in within_one if stats[m]["total_init_red_misses"] == min_misses]
     selected = "v2" if "v2" in tied else tied[0]

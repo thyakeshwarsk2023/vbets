@@ -30,8 +30,6 @@ def classify_text(text, model, vocab):
         "prescription refill", "medication refilled", "medicine refill",
         "repeat prescription for my regular",
     )):
-        # Specific administrative intent prevents refill vocabulary alone from
-        # making a routine request RED; emergency phrase rules above take priority.
         label = "GREEN"
         policy_rule = "routine_prescription_request"
         escalation = "routine_prescription_request"
@@ -41,8 +39,6 @@ def classify_text(text, model, vocab):
         and bool({"stiff", "sore", "achy"} & features)
         and {"NEG_pain", "NEG_numbness", "NEG_weakness"}.issubset(features)
     ):
-        # Narrow regression policy for the reviewed mild gardening complaint.
-        # This is corpus-specific and must not be generalized without clinical review.
         label = "GREEN"
         policy_rule = "negated_mild_gardening_back_complaint"
         escalation = "negated_mild_gardening_back_complaint"
