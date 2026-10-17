@@ -1,8 +1,10 @@
 """Shared inference policy used by the Streamlit app and evaluation scripts."""
+import os
 from preprocess import LABELS, bow_vector, normalize, preprocess
 from safety_rules import matched_red_flag
 
 
+ENABLE_TARGETED_FIXES = os.environ.get("ENABLE_TARGETED_FIXES", "true").lower() in ("true", "1", "yes")
 GREEN_CONF_THRESHOLD = 0.50
 YELLOW_CONF_THRESHOLD = 0.50
 
@@ -24,7 +26,7 @@ def classify_text(text, model, vocab):
         label = "RED"
         if raw_label != "RED":
             note = f"Escalated to RED by safety rule (matched: {rule})."
-    elif any(phrase in norm for phrase in (
+    elif ENABLE_TARGETED_FIXES and any(phrase in norm for phrase in (
         "prescription refill", "medication refilled", "medicine refill",
         "repeat prescription for my regular",
     )):
@@ -34,7 +36,7 @@ def classify_text(text, model, vocab):
         policy_rule = "routine_prescription_request"
         escalation = "routine_prescription_request"
         note = "Classified GREEN by routine prescription refill phrase."
-    elif (
+    elif ENABLE_TARGETED_FIXES and (
         "lower back" in norm and "gardening" in norm
         and bool({"stiff", "sore", "achy"} & features)
         and {"NEG_pain", "NEG_numbness", "NEG_weakness"}.issubset(features)
