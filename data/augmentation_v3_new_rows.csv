@@ -1,0 +1,37 @@
+text,label,category
+hi i need to refill my blood pressure medication the bottle is almost empty,GREEN,C1_green_admin
+can you renew your prescription for my cholesterol pills please,GREEN,C1_green_admin
+i am calling about my monthly medication refill my insurance needs an update,GREEN,C1_green_admin
+my pharmacy said my prescription bottle refill is ready for pickup,GREEN,C1_green_admin
+i just need a new bottle of my regular heart medication nothing urgent,GREEN,C1_green_admin
+can i get a refill on my diabetes pills before i run out next week,GREEN,C1_green_admin
+checking if my prescription medication is ready at the pharmacy counter,GREEN,C1_green_admin
+i have two pills left in my bottle and wanted to schedule a refill appointment,GREEN,C1_green_admin
+my doctor said to call about renewing my maintenance medication prescription,GREEN,C1_green_admin
+need to update my pharmacy on file for my regular pill refill,GREEN,C1_green_admin
+calling to ask if my medication bottle refill went through on my insurance,GREEN,C1_green_admin
+i take a daily pill for my blood pressure and need the bottle refilled,GREEN,C1_green_admin
+my shoulder has been sore from exercise but i have no numbness or tingling in my arm,GREEN,C2_green_negation
+i twisted my ankle a bit hiking yesterday but there is no swelling or bruising,GREEN,C2_green_negation
+i have a mild headache today but no nausea no vision changes and no confusion,GREEN,C2_green_negation
+my knee feels stiff after running but there is no sharp pain and no instability,GREEN,C2_green_negation
+i slept wrong and my neck is a little tight but i have no weakness in my arms,GREEN,C2_green_negation
+i have some mild fatigue this week but no fever no chills and no shortness of breath,GREEN,C2_green_negation
+my wrist is a bit achy from typing but there is no swelling and no loss of grip,GREEN,C2_green_negation
+i have occasional mild heartburn after meals but no chest pain and no pressure,GREEN,C2_green_negation
+my lower back is tired from yard work but there is no radiating pain down my leg,GREEN,C2_green_negation
+i feel a little dizzy when i stand up too fast but no fainting and no chest tightness,GREEN,C2_green_negation
+i have a small bruise on my leg but no swelling no warmth and no pain when i walk,GREEN,C2_green_negation
+my eyes feel tired after screen time but there is no blurred vision and no headache,GREEN,C2_green_negation
+my chest feels like there is a huge weight pressing down and it wont go away,RED,C3_red_lay
+i am gasping and cant seem to get enough air into my lungs,RED,C3_red_lay
+the left side of my face suddenly feels droopy and i cant talk right,RED,C3_red_lay
+my lips and tongue are swelling up fast and my throat feels tight,RED,C3_red_lay
+the cut on my arm is spurting blood and i cant get it to stop,RED,C3_red_lay
+i took way more pills than i was supposed to and now i feel really dizzy,RED,C3_red_lay
+i keep thinking about ending my life and i dont know what to do,RED,C3_red_lay
+my husband collapsed and he is not moving and i cant feel him breathing,RED,C3_red_lay
+there is blood soaking through the bandage no matter how hard i press,RED,C3_red_lay
+one side of my body suddenly went numb and i cant move my arm,RED,C3_red_lay
+my son swallowed a whole bottle of pills from the medicine cabinet,RED,C3_red_lay
+i feel like an elephant is sitting on my chest and my arm hurts too,RED,C3_red_lay
