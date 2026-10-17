@@ -20,8 +20,8 @@ def main():
     print("=" * 70)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="model/triage_mlp_v2.keras")
-    parser.add_argument("--vocab", default="model/vocab_v2.json")
+    parser.add_argument("--model", default="model/triage_mlp_v4.keras")
+    parser.add_argument("--vocab", default="model/vocab_v4.json")
     parser.add_argument("--data", default="data/unseen_test.csv")
     args = parser.parse_args()
     model = keras.models.load_model(args.model)

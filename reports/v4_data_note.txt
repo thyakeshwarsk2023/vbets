@@ -1,1 +1,0 @@
-The 12 C4_red_bleeding sentences were motivated by the Sample #10 miss diagnosed in reports/v4_diagnosis.txt. They are training-only additions and do not quote Sample #10.

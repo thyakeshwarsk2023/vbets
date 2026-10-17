@@ -1,6 +1,0 @@
-Model | Training rows | Held-out RED recall (95% CI) | Held-out accuracy | Unseen RED recall (95% CI) | Fresh-set RED recall (95% CI) | Notes
----|---:|---|---:|---|---|---
-v1 (baseline) | 296 | 24/27 (88.9%; [70.8%, 97.7%]) | 90.7% | 15/15 (100.0%; [78.2%, 100.0%]) | not evaluated | Original BoW MLP baseline with legacy 18 phrase rules and asymmetric escalation; no negation handling.
-v2 (negation features) | 296 | 25/27 (92.6%; [75.7%, 99.1%]) | 93.3% | 15/15 (100.0%; [78.2%, 100.0%]) | 10/10 (100.0%; [69.2%, 100.0%]) | Added windowed negation features (NEG_*), expanded reviewed RED_FLAGS, symmetric confidence escalation, and audit logging.
-v3 (data augmentation round 1) | 332 | 27/27 (100.0%; [87.2%, 100.0%]) | 96.0% | 14/15 (93.3%; [68.1%, 99.8%]) | not evaluated | 36 synthetic rows added; resolved held-out RED misses (Config B) but regressed on unseen Sample #10 (coughing clotted blood); excluded by pre-registered selection rule.
-v4 (deployed, data augmentation round 2) | 356 | 25/27 (92.6%; [75.7%, 99.1%]) | 94.7% | 15/15 (100.0%; [78.2%, 100.0%]) | 10/10 (100.0%; [69.2%, 100.0%]) | Deployed model. Selected by pre-registered rule (mean split-seed Config B recall 93.5%); 24 rows added for bleeding/YELLOW rebalancing; identical 10/10 RED recall to v2 on fresh test set.
