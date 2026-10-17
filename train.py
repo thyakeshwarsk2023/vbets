@@ -16,20 +16,22 @@ from preprocess import LABELS, build_vocab, bow_vector, seq_vector
 parser = argparse.ArgumentParser()
 parser.add_argument("--suffix", default="", help="Output suffix, e.g. v2; preserves baseline artifacts")
 parser.add_argument("--no-negation", action="store_true", help="Disable NEG_ features for A/B comparisons")
+parser.add_argument("--split-seed", type=int, default=42, help="Train/test split seed (default preserves the original split)")
+parser.add_argument("--init-seed", type=int, default=42, help="Model initialization seed (separate from the split seed)")
 args = parser.parse_args()
-SEED = 42
+SPLIT_SEED = args.split_seed
 USE_NEGATION = not args.no_negation
 suffix = f"_{args.suffix}" if args.suffix else ""
 model_path = f"model/triage_mlp{suffix}.keras"
 vocab_path = f"model/vocab{suffix}.json"
 metrics_path = f"model/metrics{suffix}.json"
 matrix_path = f"model/confusion_matrix{suffix}.png"
-tf.keras.utils.set_random_seed(SEED)
+tf.keras.utils.set_random_seed(args.init_seed)
 os.makedirs("model", exist_ok=True)
 
 df = pd.read_csv("data/triage_dataset.csv").dropna()
 df["y"] = df["label"].map({l: i for i, l in enumerate(LABELS)})
-train_df, test_df = train_test_split(df, test_size=0.2, stratify=df["y"], random_state=SEED)
+train_df, test_df = train_test_split(df, test_size=0.2, stratify=df["y"], random_state=SPLIT_SEED)
 print(f"Train: {len(train_df)}  Test: {len(test_df)}")
 
 # Vocabulary is built from TRAINING data only (no leakage)

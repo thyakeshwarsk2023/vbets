@@ -1,0 +1,70 @@
+V-BETS v4 diagnostic: Sample #10 regression
+Allowed diagnostic data: original seed-42 held-out rows and contaminated data/unseen_test.csv only.
+Split: 296 original training rows / 75 held-out rows; initialization seeds=[1, 7, 13, 21, 42, 77, 101, 123, 2026, 314].
+Sample #10: i had a massive coughing fit and brought up a cupful of dark red clotted blood and now i feel lightheaded and breathless
+
+Initialization-seed runs (each row is a separate retraining; probabilities RED/YELLOW/GREEN):
+Model | Init seed | Sample #10 raw probabilities | raw class | general-rule class | held-out RED recall raw/general | unseen RED recall raw/general
+---|---:|---|---|---|---|---
+v2 | 1 | [0.2886,0.7102,0.0012] | YELLOW | YELLOW | 0.889/0.926 | 0.933/0.933
+v2 | 7 | [0.0761,0.9198,0.0042] | YELLOW | YELLOW | 0.926/0.926 | 0.867/0.867
+v2 | 13 | [0.6074,0.3896,0.0030] | RED | RED | 0.889/0.963 | 1.000/1.000
+v2 | 21 | [0.2765,0.7206,0.0029] | YELLOW | YELLOW | 0.889/0.926 | 0.933/0.933
+v2 | 42 | [0.6896,0.3084,0.0020] | RED | RED | 0.926/0.926 | 1.000/1.000
+v2 | 77 | [0.7273,0.2683,0.0044] | RED | RED | 0.889/0.963 | 0.933/0.933
+v2 | 101 | [0.6491,0.3484,0.0025] | RED | RED | 0.889/0.963 | 1.000/1.000
+v2 | 123 | [0.5622,0.4283,0.0094] | RED | RED | 0.889/0.963 | 1.000/1.000
+v2 | 2026 | [0.6164,0.3788,0.0048] | RED | RED | 0.889/0.963 | 1.000/1.000
+v2 | 314 | [0.4208,0.5769,0.0023] | YELLOW | YELLOW | 0.889/0.926 | 0.933/0.933
+v3 | 1 | [0.5843,0.4075,0.0081] | RED | RED | 0.926/0.926 | 1.000/1.000
+v3 | 7 | [0.1810,0.8044,0.0146] | YELLOW | YELLOW | 0.889/0.963 | 0.867/0.867
+v3 | 13 | [0.4040,0.5464,0.0495] | YELLOW | YELLOW | 0.889/0.963 | 0.867/0.867
+v3 | 21 | [0.4500,0.5219,0.0282] | YELLOW | YELLOW | 0.852/0.926 | 0.933/0.933
+v3 | 42 | [0.3549,0.6275,0.0176] | YELLOW | YELLOW | 0.926/1.000 | 0.933/0.933
+v3 | 77 | [0.9225,0.0743,0.0032] | RED | RED | 0.889/0.963 | 1.000/1.000
+v3 | 101 | [0.3480,0.6358,0.0161] | YELLOW | YELLOW | 0.926/0.963 | 0.933/0.933
+v3 | 123 | [0.2406,0.7415,0.0178] | YELLOW | YELLOW | 0.889/0.963 | 0.867/0.867
+v3 | 2026 | [0.1299,0.8578,0.0123] | YELLOW | YELLOW | 0.926/0.963 | 0.933/0.933
+v3 | 314 | [0.4289,0.5494,0.0217] | YELLOW | YELLOW | 0.926/0.926 | 0.933/0.933
+v2 Sample #10 RED correctness: raw 6/10; with general rules 6/10.
+v3 Sample #10 RED correctness: raw 2/10; with general rules 2/10.
+
+Leave-one-category-out v3 runs (five initialization seeds each):
+Omitted category | Init seed | Sample #10 raw/general | held-out RED recall raw/general | held-out accuracy general | unseen RED recall raw/general
+---|---:|---|---|---:|---
+C1_green_admin | 1 | RED/RED | 0.889/0.926 | 0.933 | 1.000/1.000
+C1_green_admin | 7 | YELLOW/YELLOW | 0.889/0.926 | 0.920 | 0.933/0.933
+C1_green_admin | 13 | YELLOW/YELLOW | 0.889/0.926 | 0.920 | 0.933/0.933
+C1_green_admin | 21 | YELLOW/YELLOW | 0.889/0.926 | 0.933 | 0.867/0.867
+C1_green_admin | 42 | YELLOW/YELLOW | 0.889/0.926 | 0.920 | 0.933/0.933
+C2_green_negation | 1 | YELLOW/YELLOW | 0.889/0.926 | 0.920 | 0.933/0.933
+C2_green_negation | 7 | YELLOW/YELLOW | 0.963/1.000 | 0.960 | 0.933/0.933
+C2_green_negation | 13 | YELLOW/YELLOW | 0.926/0.926 | 0.920 | 0.867/0.867
+C2_green_negation | 21 | YELLOW/YELLOW | 0.963/1.000 | 0.947 | 0.933/0.933
+C2_green_negation | 42 | YELLOW/YELLOW | 0.889/0.963 | 0.947 | 0.933/0.933
+C3_red_lay | 1 | YELLOW/YELLOW | 0.889/0.926 | 0.920 | 0.933/0.933
+C3_red_lay | 7 | YELLOW/YELLOW | 0.889/0.963 | 0.933 | 0.933/0.933
+C3_red_lay | 13 | YELLOW/YELLOW | 0.852/0.889 | 0.907 | 0.933/0.933
+C3_red_lay | 21 | YELLOW/YELLOW | 0.889/0.963 | 0.947 | 0.933/0.933
+C3_red_lay | 42 | YELLOW/YELLOW | 0.926/0.926 | 0.933 | 0.933/0.933
+Without C1_green_admin: Sample #10 correct raw 1/5, general 1/5; mean held-out general RED recall 0.926; mean held-out accuracy 0.925; mean unseen general RED recall 0.933.
+Without C2_green_negation: Sample #10 correct raw 0/5, general 0/5; mean held-out general RED recall 0.963; mean held-out accuracy 0.939; mean unseen general RED recall 0.920.
+Without C3_red_lay: Sample #10 correct raw 0/5, general 0/5; mean held-out general RED recall 0.933; mean held-out accuracy 0.928; mean unseen general RED recall 0.933.
+
+Nearest v3 training neighbors to Sample #10 (TF-IDF cosine):
+Rank | Cosine | Label | Text
+---:|---:|---|---
+1 | 0.3255 | RED | i am coughing up blood
+2 | 0.1821 | YELLOW | i have had diarrhea for two days and feel weak
+3 | 0.1390 | RED | my uncle fell and now one side of his face is drooping
+4 | 0.1299 | RED | i ate peanuts and now my face is swelling and i cannot breathe
+5 | 0.1269 | RED | massive bleeding after the surgery and the wound will not stop
+Sample #10 preprocessed tokens present in the v3 vocabulary: i, have, a, massive, cough, and, up, a, of, dark, red, blood, and, now, i, feel, and
+Tokens absent from the v3 vocabulary: fit, bring, cupful, clot, lightheaded, breathless
+
+Diagnosis:
+Sample #10 was raw-RED in 6/10 v2 initializations and 2/10 v3 initializations.
+Leave-one-category-out raw correctness fractions: without C1_green_admin 20%; without C2_green_negation 0%; without C3_red_lay 0%.
+Sample #10 flips across initialization seeds in both v2 and v3, so initialization variability is present. However, v3 was correct in 2/10 runs versus v2 in 6/10, an augmentation-associated reduction in recovery frequency across these tested runs.
+On the comparable first five seeds, full v3 was correct in 1/5; removing C1 was also 1/5, while removing C2 or C3 was 0/5. No leave-one-category-out result improves on full v3, so no specific category is implicated by this ablation. The experiment does not identify a causal mechanism.
+The held-out and original unseen metrics are diagnostic only; the original unseen set is contaminated and is not a generalization estimate.
