@@ -1,0 +1,15 @@
+Pre-registered model-selection rule and application
+Rule (specified before any fresh-set evaluation): candidates v2/v3/v4 and any Step-4 variants; exclude any candidate with at least one true-RED unseen row predicted non-RED in >=60% of five initialization runs; among remaining candidates choose highest mean Config B RED recall across split seeds; candidates within 1 percentage point of the best are tied and the one with fewer Config B RED misses across five init seeds on the contaminated original unseen set is preferred; if still tied, choose v2.
+Only the committed Step 5 metrics and data/unseen_test.csv were used below. data/unseen_test_v2.csv was not read, inspected, or evaluated.
+No v4 no-flag or category-omission variant exists: the similarity audit flagged zero rows and the diagnostic did not implicate a category.
+
+Candidate | mean Config B RED recall over split seeds | Config B RED misses across 5 init runs on contaminated unseen | stable missed true-RED rows (count/5) | eligible
+---|---:|---:|---|---
+v2 | 91.667% | 4 | #10 (3/5) | no
+v3 | 92.593% | 6 | #10 (4/5) | no
+v4 | 93.519% | 2 | none | yes
+
+Within-one-percentage-point eligible set: v4
+Applied miss-count tie break: v4=2
+Selected candidate: v4.
+Variants not trained: none. The final fresh-set evaluation must compare this selected model with v2 only, exactly once, under Configs A/B/C.
