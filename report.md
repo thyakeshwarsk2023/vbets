@@ -139,7 +139,7 @@ Evaluates whether word-order sequence representations outperform sparse multi-ho
 
 ## 5. Experimental Results & Discussion
 
-*All metrics and numbers reported in Sections 5.1 and 5.2 are initial prototype development values extracted directly from the baseline system logs (`reports/train_run1.txt`, `reports/train_run2.txt`, `reports/unseen_eval_run2b.txt`, and `model/metrics.json`). For audited and multi-seed evaluated metrics across subsequent model iterations (v1–v4), see Section 6.*
+*All metrics and numbers reported in Sections 5.1 and 5.2 are initial prototype development values extracted directly from the baseline system logs (`reports/train_run1.txt`, `reports/train_run2.txt`, `reports/unseen_eval_run2b.txt`, and `model/metrics.json`). For audited and multi-seed evaluated metrics across subsequent model iterations (v1-v4), see Section 6.*
 
 ### 5.1 Held-Out Test Set Performance (N=75)
 
@@ -222,7 +222,7 @@ Because words like *fell*, *backward*, and *garage* are heavily correlated with 
 ### 6.1 Independent Audit Summary
 An independent audit of the initial V-BETS codebase and evaluation results (`reports/final_reevaluation.txt`, `reports/unseen_eval_v2.txt`) identified key safety and architectural vulnerabilities: incomplete coverage within the original 19-phrase `RED_FLAGS` list, a complete lack of negation handling in both the Bag-of-Words vectorizer and the phrase rules, an asymmetric confidence escalation policy that caught low-confidence GREEN predictions but ignored low-confidence YELLOW predictions, and missing operational safeguards including unhandled speech service timeouts, lack of persistent decision audit logging, and incomplete medical disclaimer disclosures regarding vital-sign assessments.
 
-### 6.2 Initial Remediation (Fixes 1–4)
+### 6.2 Initial Remediation (Fixes 1-4)
 
 To resolve these audit findings, four systematic remediations were engineered:
 

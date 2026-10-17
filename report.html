@@ -1,112 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>V-BETS Technical Report</title>
-<style>
-  @page {
-    size: A4;
-    margin: 20mm 18mm 20mm 18mm;
-  }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #1a1a1a;
-    line-height: 1.6;
-    font-size: 11pt;
-    margin: 0;
-    padding: 0;
-  }
-  h1 {
-    font-size: 20pt;
-    color: #0d47a1;
-    border-bottom: 2px solid #0d47a1;
-    padding-bottom: 6px;
-    margin-top: 0;
-    margin-bottom: 4px;
-  }
-  h2 {
-    font-size: 14pt;
-    color: #1565c0;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 4px;
-    margin-top: 18pt;
-    margin-bottom: 8pt;
-    page-break-after: avoid;
-  }
-  h3 {
-    font-size: 12pt;
-    color: #283593;
-    margin-top: 14pt;
-    margin-bottom: 6pt;
-    page-break-after: avoid;
-  }
-  h4 {
-    font-size: 11pt;
-    color: #1565c0;
-    margin-top: 10pt;
-    margin-bottom: 4pt;
-    page-break-after: avoid;
-  }
-  p, li {
-    text-align: justify;
-    margin-top: 4pt;
-    margin-bottom: 6pt;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10pt;
-    margin-bottom: 14pt;
-    font-size: 10pt;
-    page-break-inside: avoid;
-  }
-  th, td {
-    border: 1px solid #cfd8dc;
-    padding: 6pt 8pt;
-    text-align: left;
-  }
-  th {
-    background-color: #eceff1;
-    font-weight: 600;
-    color: #263238;
-  }
-  tr:nth-child(even) {
-    background-color: #f8f9fa;
-  }
-  code {
-    font-family: "Consolas", "Courier New", monospace;
-    font-size: 9.5pt;
-    background-color: #f1f3f4;
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-  pre {
-    background-color: #f5f5f5;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 8pt;
-    font-size: 9pt;
-    overflow-x: auto;
-    page-break-inside: avoid;
-    line-height: 1.35;
-  }
-  pre code {
-    background: none;
-    padding: 0;
-  }
-  blockquote {
-    border-left: 4px solid #1976d2;
-    margin: 10pt 0;
-    padding: 6pt 12pt;
-    background-color: #e3f2fd;
-    color: #0d47a1;
-  }
-  hr {
-    border: 0;
-    border-top: 1px solid #e0e0e0;
-    margin: 16pt 0;
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>V-BETS: Voice-Based Emergency Triage System - Technical Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 18mm 20mm 18mm;
+            @bottom-right {
+                content: counter(page);
+            }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.55;
+            color: #1a1a1a;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 20pt;
+            color: #0f172a;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        h2 {
+            font-size: 14pt;
+            color: #0f172a;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 4px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+        h3 {
+            font-size: 12pt;
+            color: #1e293b;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            page-break-after: avoid;
+        }
+        h4 {
+            font-size: 11pt;
+            color: #334155;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            page-break-after: avoid;
+        }
+        p, li {
+            text-align: justify;
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 9.5pt;
+            page-break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        code {
+            font-family: Consolas, "Courier New", Courier, monospace;
+            font-size: 9pt;
+            background-color: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 8.5pt;
+            line-height: 1.4;
+            margin: 12px 0;
+            page-break-inside: avoid;
+        }
+        pre code {
+            background-color: transparent;
+            color: #f8fafc;
+            padding: 0;
+            border: none;
+            font-size: 8.5pt;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 20px 0;
+        }
+        ul, ol {
+            padding-left: 22px;
+            margin-top: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
 <h1>V-BETS: Voice-Based Emergency Triage System</h1>
@@ -350,7 +357,7 @@ This is the original baseline list of emergency phrases; it was later expanded d
 </table>
 <hr />
 <h2>5. Experimental Results &amp; Discussion</h2>
-<p><em>All metrics and numbers reported in Sections 5.1 and 5.2 are initial prototype development values extracted directly from the baseline system logs (<code>reports/train_run1.txt</code>, <code>reports/train_run2.txt</code>, <code>reports/unseen_eval_run2b.txt</code>, and <code>model/metrics.json</code>). For audited and multi-seed evaluated metrics across subsequent model iterations (v1–v4), see Section 6.</em></p>
+<p><em>All metrics and numbers reported in Sections 5.1 and 5.2 are initial prototype development values extracted directly from the baseline system logs (<code>reports/train_run1.txt</code>, <code>reports/train_run2.txt</code>, <code>reports/unseen_eval_run2b.txt</code>, and <code>model/metrics.json</code>). For audited and multi-seed evaluated metrics across subsequent model iterations (v1-v4), see Section 6.</em></p>
 <h3>5.1 Held-Out Test Set Performance (N=75)</h3>
 <pre><code>=== BoW MLP Confusion Matrix (Held-out N=75) ===
                Predicted RED   Predicted YELLOW   Predicted GREEN
@@ -530,7 +537,7 @@ True GREEN           1                 2                12
 <h2>6. Post-Audit Remediation and Model Evolution</h2>
 <h3>6.1 Independent Audit Summary</h3>
 <p>An independent audit of the initial V-BETS codebase and evaluation results (<code>reports/final_reevaluation.txt</code>, <code>reports/unseen_eval_v2.txt</code>) identified key safety and architectural vulnerabilities: incomplete coverage within the original 19-phrase <code>RED_FLAGS</code> list, a complete lack of negation handling in both the Bag-of-Words vectorizer and the phrase rules, an asymmetric confidence escalation policy that caught low-confidence GREEN predictions but ignored low-confidence YELLOW predictions, and missing operational safeguards including unhandled speech service timeouts, lack of persistent decision audit logging, and incomplete medical disclaimer disclosures regarding vital-sign assessments.</p>
-<h3>6.2 Initial Remediation (Fixes 1–4)</h3>
+<h3>6.2 Initial Remediation (Fixes 1-4)</h3>
 <p>To resolve these audit findings, four systematic remediations were engineered:</p>
 <p>Fix 1 (Expanded Emergency Phrase Rules): The reviewed emergency list in <code>safety_rules.py</code> was expanded from the original 19 phrases to 60 targeted phrases (41 newly engineered phrases across seven high-acuity categories: acute chest pain, respiratory compromise, stroke presentation, anaphylaxis, severe hemorrhage, overdose, and suicidality). A 5-token negation window was introduced (<code>matched_red_flag</code>), ensuring phrases preceded by explicit negation cues (e.g., <em>"denies chest pain"</em>) do not force RED escalation, while preserving inherent emergency wording (e.g., <em>"cannot breathe"</em>).</p>
 <p>Fix 2 (Negation-Aware Preprocessing &amp; Retrained Model v2): The preprocessing pipeline in <code>preprocess.py</code> was enhanced to prepend a <code>NEG_</code> prefix to tokens appearing within a 3-token window following negation cues (<code>no</code>, <code>not</code>, <code>never</code>, <code>without</code>, <code>denies</code>, <code>cannot</code>). Model v2 was trained on the 296 training rows with this 749-dimensional vocabulary (<code>model/vocab_v2.json</code>, <code>model/metrics_v2.json</code>), raising held-out accuracy from 90.67% to 93.33%.</p>
