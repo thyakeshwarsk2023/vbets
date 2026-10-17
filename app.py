@@ -25,8 +25,8 @@ RESPONSES = {
 
 @st.cache_resource
 def load_assets():
-    model = keras.models.load_model("model/triage_mlp_v2.keras")
-    vocab = json.load(open("model/vocab_v2.json"))
+    model = keras.models.load_model("model/triage_mlp_v4.keras")
+    vocab = json.load(open("model/vocab_v4.json"))
     return model, vocab
 
 
