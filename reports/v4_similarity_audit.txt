@@ -1,0 +1,35 @@
+V-BETS v4 data validation and similarity audit
+New row count: 24; exact duplicates against other data CSVs (including locked fresh test): 0.
+Text rows containing commas: 0.
+v3 corpus rows: 407; v4 corpus rows: 431.
+Jaccard uses unique lowercase normalized word tokens; cosine uses sklearn TfidfVectorizer defaults. Similarity reference is data/unseen_test.csv only.
+Flag rule: any Jaccard > 0.50 or TF-IDF cosine > 0.60 against original unseen rows.
+
+Row | Category | Label | max Jaccard (unseen row) | max cosine (unseen row) | Jaccard to Sample #10 | cosine to Sample #10 | Flag
+---:|---|---|---|---|---:|---:|---
+01 | C4_red_bleeding | RED | 0.348 (#10) | 0.279 (#10) | 0.348 | 0.279 | no
+02 | C4_red_bleeding | RED | 0.222 (#02) | 0.262 (#02) | 0.154 | 0.113 | no
+03 | C4_red_bleeding | RED | 0.385 (#02) | 0.408 (#02) | 0.100 | 0.079 | no
+04 | C4_red_bleeding | RED | 0.179 (#15) | 0.134 (#15) | 0.069 | 0.019 | no
+05 | C4_red_bleeding | RED | 0.188 (#17) | 0.192 (#19) | 0.148 | 0.163 | no
+06 | C4_red_bleeding | RED | 0.143 (#10) | 0.143 (#02) | 0.143 | 0.126 | no
+07 | C4_red_bleeding | RED | 0.194 (#07) | 0.273 (#08) | 0.097 | 0.074 | no
+08 | C4_red_bleeding | RED | 0.214 (#10) | 0.245 (#02) | 0.214 | 0.172 | no
+09 | C4_red_bleeding | RED | 0.235 (#13) | 0.161 (#15) | 0.143 | 0.104 | no
+10 | C4_red_bleeding | RED | 0.133 (#08) | 0.097 (#08) | 0.069 | 0.054 | no
+11 | C4_red_bleeding | RED | 0.280 (#10) | 0.194 (#10) | 0.280 | 0.194 | no
+12 | C4_red_bleeding | RED | 0.206 (#17) | 0.221 (#17) | 0.133 | 0.124 | no
+13 | C5_yellow | YELLOW | 0.222 (#03) | 0.245 (#28) | 0.103 | 0.058 | no
+14 | C5_yellow | YELLOW | 0.281 (#30) | 0.284 (#23) | 0.185 | 0.125 | no
+15 | C5_yellow | YELLOW | 0.189 (#13) | 0.112 (#17) | 0.097 | 0.019 | no
+16 | C5_yellow | YELLOW | 0.125 (#19) | 0.115 (#14) | 0.067 | 0.018 | no
+17 | C5_yellow | YELLOW | 0.241 (#20) | 0.283 (#20) | 0.100 | 0.052 | no
+18 | C5_yellow | YELLOW | 0.194 (#18) | 0.214 (#18) | 0.067 | 0.038 | no
+19 | C5_yellow | YELLOW | 0.278 (#16) | 0.387 (#16) | 0.067 | 0.036 | no
+20 | C5_yellow | YELLOW | 0.192 (#03) | 0.176 (#29) | 0.111 | 0.023 | no
+21 | C5_yellow | YELLOW | 0.222 (#07) | 0.193 (#07) | 0.094 | 0.054 | no
+22 | C5_yellow | YELLOW | 0.207 (#23) | 0.237 (#23) | 0.097 | 0.018 | no
+23 | C5_yellow | YELLOW | 0.222 (#28) | 0.157 (#45) | 0.091 | 0.018 | no
+24 | C5_yellow | YELLOW | 0.214 (#03) | 0.162 (#16) | 0.100 | 0.038 | no
+
+Flagged v4 row numbers: none
