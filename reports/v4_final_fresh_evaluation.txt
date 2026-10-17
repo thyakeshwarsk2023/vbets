@@ -1,0 +1,57 @@
+V-BETS final fresh-set evaluation (single pass)
+Set: data/unseen_test_v2.csv; model selected by committed reports/model_selection_rule.txt: v4; baseline: v2.
+Each model produced one raw probability matrix; Configs A/B/C were derived from that same matrix.
+Config A=raw argmax; B=general RED_FLAGS and symmetric confidence escalation with targeted fixes off; C=full pipeline with targeted fixes on.
+Confusion matrices are rows=true and columns=predicted in RED,YELLOW,GREEN order. RED recall CI is exact two-sided Clopper-Pearson 95%.
+N=30; rows are synthetic author-written cases.
+
+selected_v4 / A_raw_model
+Confusion matrix: [10,0,0];[0,10,0];[0,0,10]
+RED recall: 10/10 = 100.0%; 95% CI [69.2%, 100.0%]
+Accuracy: 100.0%
+Per-class recall: RED=100.0%, YELLOW=100.0%, GREEN=100.0%
+Misclassified sentences (raw model probabilities RED/YELLOW/GREEN):
+  none
+
+selected_v4 / B_general_rules
+Confusion matrix: [10,0,0];[0,10,0];[0,0,10]
+RED recall: 10/10 = 100.0%; 95% CI [69.2%, 100.0%]
+Accuracy: 100.0%
+Per-class recall: RED=100.0%, YELLOW=100.0%, GREEN=100.0%
+Misclassified sentences (raw model probabilities RED/YELLOW/GREEN):
+  none
+
+selected_v4 / C_full_policy
+Confusion matrix: [10,0,0];[0,10,0];[0,0,10]
+RED recall: 10/10 = 100.0%; 95% CI [69.2%, 100.0%]
+Accuracy: 100.0%
+Per-class recall: RED=100.0%, YELLOW=100.0%, GREEN=100.0%
+Misclassified sentences (raw model probabilities RED/YELLOW/GREEN):
+  none
+
+baseline_v2 / A_raw_model
+Confusion matrix: [10,0,0];[0,10,0];[0,0,10]
+RED recall: 10/10 = 100.0%; 95% CI [69.2%, 100.0%]
+Accuracy: 100.0%
+Per-class recall: RED=100.0%, YELLOW=100.0%, GREEN=100.0%
+Misclassified sentences (raw model probabilities RED/YELLOW/GREEN):
+  none
+
+baseline_v2 / B_general_rules
+Confusion matrix: [10,0,0];[0,10,0];[0,0,10]
+RED recall: 10/10 = 100.0%; 95% CI [69.2%, 100.0%]
+Accuracy: 100.0%
+Per-class recall: RED=100.0%, YELLOW=100.0%, GREEN=100.0%
+Misclassified sentences (raw model probabilities RED/YELLOW/GREEN):
+  none
+
+baseline_v2 / C_full_policy
+Confusion matrix: [10,0,0];[0,10,0];[0,0,10]
+RED recall: 10/10 = 100.0%; 95% CI [69.2%, 100.0%]
+Accuracy: 100.0%
+Per-class recall: RED=100.0%, YELLOW=100.0%, GREEN=100.0%
+Misclassified sentences (raw model probabilities RED/YELLOW/GREEN):
+  none
+
+No tuning, rule changes, or data additions were made after this evaluation.
+This fresh set remains small, synthetic, and author-written; one evaluation cannot establish clinical generalization.
