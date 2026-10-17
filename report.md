@@ -103,7 +103,7 @@ To counteract the inherent vulnerability of pure statistical classifiers to seve
 
 Two deep learning architectures were developed and trained: the primary deployed **BoW MLP** and an **Embedding Model** developed for comparative benchmarking.
 
-### 4.1 Model A: Bag-of-Words Multi-Layer Perceptron (Deployed)
+### 4.1 Model A: Bag-of-Words Multi-Layer Perceptron (Deployed Architecture)
 Designed for sub-millisecond CPU inference and zero footprint overhead:
 
 | Layer | Type | Output Shape | Parameters | Activation / Details |
@@ -136,7 +136,7 @@ Evaluates whether word-order sequence representations outperform sparse multi-ho
 
 ## 5. Experimental Results & Discussion
 
-*All metrics and numbers reported below are empirical values extracted directly from the system logs (`reports/train_run1.txt`, `reports/train_run2.txt`, `reports/unseen_eval_run2b.txt`, and `model/metrics.json`).*
+*All metrics and numbers reported in Sections 5.1 and 5.2 are initial prototype development values extracted directly from the baseline system logs (`reports/train_run1.txt`, `reports/train_run2.txt`, `reports/unseen_eval_run2b.txt`, and `model/metrics.json`). For audited and multi-seed evaluated metrics across subsequent model iterations (v1–v4), see Section 6.*
 
 ### 5.1 Held-Out Test Set Performance ($N=75$)
 
@@ -152,7 +152,7 @@ True GREEN           0                 1                24
 
 | Model Architecture | Class | Precision | Recall | F1-Score | Support | Overall Accuracy |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **BoW MLP** *(Deployed)* | **RED** | **0.9231** | **0.8889** | **0.9057** | 27 | **90.67%** (68/75) |
+| **BoW MLP** *(Initial v1 Prototype; see Section 6 for v4)* | **RED** | **0.9231** | **0.8889** | **0.9057** | 27 | **90.67%** (68/75) |
 | | **YELLOW** | 0.8333 | 0.8696 | 0.8511 | 23 | |
 | | **GREEN** | 0.9600 | 0.9600 | 0.9600 | 25 | |
 | | *Macro Avg* | 0.9055 | 0.9062 | 0.9056 | 75 | |
@@ -161,7 +161,7 @@ True GREEN           0                 1                24
 | | **GREEN** | 0.9600 | 0.9600 | 0.9600 | 25 | |
 | | *Macro Avg* | 0.9326 | 0.9308 | 0.9314 | 75 | |
 
-The Embedding Model achieved higher held-out accuracy (93.33% vs 90.67%) due to its dense continuous representation, but the BoW MLP was deployed because its sparse activations pair reliably with the keyword-based deterministic safety layer.
+The Embedding Model achieved higher held-out accuracy (93.33% vs 90.67%) due to its dense continuous representation, but the BoW MLP architecture was deployed (with Model v4 as the final weights; see Section 6) because its sparse activations pair reliably with the keyword-based deterministic safety layer.
 
 ---
 
