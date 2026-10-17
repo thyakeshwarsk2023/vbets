@@ -12,7 +12,7 @@
 
 Emergency department overcrowding and triage delays pose significant clinical risks. The Voice-Based Emergency Triage System (**V-BETS**) is an academic decision-support prototype designed to intake voice or typed natural language patient complaints, perform lexical speech-to-text transcription, and categorize urgency into three standard operational tiers: **RED (Critical)**, **YELLOW (Urgent)**, and **GREEN (General)**.
 
-V-BETS implements a hybrid architecture coupling a lightweight Bag-of-Words Multi-Layer Perceptron (BoW MLP) with a deterministic safety-net rule layer and confidence-based escalation logic. On an independent, unseen test set ($N=45$) featuring rambling conversational transcripts, speech recognition typos, and borderline clinical scenarios, the pure neural classifier attained 84.44% accuracy with 93.33% RED recall. When combined with the deterministic safety layer, the production pipeline achieved **100.00% RED recall (15/15 critical cases detected)** and **86.67% overall accuracy**, effectively preventing catastrophic under-triage failures.
+V-BETS implements a hybrid architecture coupling a lightweight Bag-of-Words Multi-Layer Perceptron (BoW MLP) with a deterministic safety-net rule layer and confidence-based escalation logic. In initial development testing on an unseen evaluation set ($N=45$) featuring rambling conversational transcripts, speech recognition typos, and borderline clinical scenarios, the baseline neural classifier attained 84.44% accuracy with 93.33% RED recall (14/15; 95% CI [68.05%, 99.83%]), while the initial hybrid pipeline achieved 100.00% RED recall (15/15; 95% CI [78.20%, 100.00%]) and 86.67% overall accuracy. Subsequent independent audit, post-audit remediation, multi-seed ablations, and a pre-registered evaluation on an untouched fresh test set ($N=30$) established updated performance metrics, tracked model evolution from v1 through deployed model v4, and highlighted the primary safety role of the deterministic rule layer; please refer to **Section 6 (Post-Audit Remediation and Model Evolution)** for these audited and independently tested final numbers.
 
 ---
 
@@ -182,11 +182,11 @@ True GREEN           1                 2                12
 | Metric | Run 1 (Model Alone) | Run 2 (Model Alone) | Run 2b (Full Pipeline + Rules) |
 | :--- | :---: | :---: | :---: |
 | **Overall Accuracy** | 88.89% (40/45) | 84.44% (38/45) | **86.67% (39/45)** |
-| **RED Recall** | 93.33% (14/15) | 93.33% (14/15) | **100.00% (15/15)** |
+| **RED Recall (95% CI)** | 93.33% (14/15; [68.05%, 99.83%]) | 93.33% (14/15; [68.05%, 99.83%]) | **100.00% (15/15; [78.20%, 100.00%])** |
 | **RED Precision** | 87.50% (14/16) | 77.78% (14/18) | 78.95% (15/19) |
 | **YELLOW Recall** | 86.67% (13/15) | 80.00% (12/15) | 80.00% (12/15) |
 | **GREEN Recall** | 86.67% (13/15) | 80.00% (12/15) | 80.00% (12/15) |
-| **Critical Under-triages** | 1 | 1 | **0 (Zero)** |
+| **Critical Under-triages** | 1 | 1 | **0 (Zero on initial set)** |
 
 ---
 
@@ -302,4 +302,4 @@ graph TD
 
 V-BETS demonstrates that a lightweight neural network (under 600 KB) combined with classical NLP lemmatization can provide real-time categorization of patient emergency descriptions. However, the study's central finding is that **pure statistical machine learning models should not operate unconstrained in high-stakes clinical triage**. 
 
-By pairing an empirical Bag-of-Words MLP with a deterministic red-flag safety net and low-confidence escalation logic, the V-BETS production pipeline eliminated fatal false negatives, raising unseen RED recall from 93.33% to **100.00%**. This hybrid architecture highlights a practical path forward for AI decision-support tools: statistical models provide flexible classification, while deterministic rule layers safeguard patient safety.
+By pairing an empirical Bag-of-Words MLP with a deterministic red-flag safety net and low-confidence escalation logic, the V-BETS production pipeline substantially mitigated high-acuity under-triage failures across tested synthetic scenarios, raising RED recall on the initial 45-sample evaluation set from 93.33% (14/15; 95% CI [68.05%, 99.83%]) to 100.00% (15/15; 95% CI [78.20%, 100.00%]). The final deployed model is Model v4, selected via an objective pre-registered rule, whose performance on an independent fresh test set ($N=30$, 10/10 RED recall, 95% CI [69.2%, 100.0%]) proved statistically indistinguishable from the earlier Model v2. This hybrid architecture highlights a practical path forward for AI decision-support tools: statistical models provide flexible classification, while deterministic rule layers safeguard patient safety.
