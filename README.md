@@ -1,6 +1,6 @@
 # 🚑 V-BETS: Voice-Based Emergency Triage System
 
-V-BETS is an academic voice-enabled triage prototype combining Speech-to-Text (SpeechRecognition), Natural Language Processing, Deep Learning (Bag-of-Words MLP), and deterministic safety-rule overrides to prioritize medical emergencies into three triage levels:
+V-BETS is an academic voice-enabled triage prototype combining Speech-to-Text (SpeechRecognition), Natural Language Processing, Deep Learning (Bag-of-Words MLP, deployed Model v4), and deterministic safety-rule overrides to prioritize medical emergencies into three triage levels:
 - 🔴 **RED – Critical**: Immediate life threats (airway compromise, unconsciousness, cardiac arrest, severe hemorrhage).
 - 🟡 **YELLOW – Urgent**: Urgent medical attention required (fractures, severe pain, moderate infection, deep lacerations).
 - 🟢 **GREEN – General**: Non-urgent inquiries, routine appointments, prescription refills, and administrative questions.

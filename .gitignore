@@ -44,3 +44,8 @@ desktop.ini
 # Explicitly track trained models and deployment assets
 !model/
 !model/**
+
+# Local operational logs
+logs/
+logs/decisions.jsonl
+
