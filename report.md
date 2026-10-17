@@ -12,7 +12,7 @@
 
 Emergency department overcrowding and triage delays pose significant clinical risks. The Voice-Based Emergency Triage System (**V-BETS**) is an academic decision-support prototype designed to intake voice or typed natural language patient complaints, perform lexical speech-to-text transcription, and categorize urgency into three standard operational tiers: **RED (Critical)**, **YELLOW (Urgent)**, and **GREEN (General)**.
 
-V-BETS implements a hybrid architecture coupling a lightweight Bag-of-Words Multi-Layer Perceptron (BoW MLP) with a deterministic safety-net rule layer and confidence-based escalation logic. In initial development testing on an unseen evaluation set ($N=45$) featuring rambling conversational transcripts, speech recognition typos, and borderline clinical scenarios, the baseline neural classifier attained 84.44% accuracy with 93.33% RED recall (14/15; 95% CI [68.05%, 99.83%]), while the initial hybrid pipeline achieved 100.00% RED recall (15/15; 95% CI [78.20%, 100.00%]) and 86.67% overall accuracy. Subsequent independent audit, post-audit remediation, multi-seed ablations, and a pre-registered evaluation on an untouched fresh test set ($N=30$) established updated performance metrics, tracked model evolution from v1 through deployed model v4, and highlighted the primary safety role of the deterministic rule layer; please refer to **Section 6 (Post-Audit Remediation and Model Evolution)** for these audited and independently tested final numbers.
+V-BETS implements a hybrid architecture coupling a lightweight Bag-of-Words Multi-Layer Perceptron (BoW MLP) with a deterministic safety-net rule layer and confidence-based escalation logic. In initial development testing on an unseen evaluation set (N=45) featuring rambling conversational transcripts, speech recognition typos, and borderline clinical scenarios, the baseline neural classifier attained 84.44% accuracy with 93.33% RED recall (14/15; 95% CI [68.05%, 99.83%]), while the initial hybrid pipeline achieved 100.00% RED recall (15/15; 95% CI [78.20%, 100.00%]) and 86.67% overall accuracy. Subsequent independent audit, post-audit remediation, multi-seed ablations, and a pre-registered evaluation on an untouched fresh test set (N=30) established updated performance metrics, tracked model evolution from v1 through deployed model v4, and highlighted the primary safety role of the deterministic rule layer; please refer to **Section 6 (Post-Audit Remediation and Model Evolution)** for these audited and independently tested final numbers.
 
 ---
 
@@ -29,21 +29,21 @@ Crucially, in medical triage, the cost of an **under-triage error** (classifying
 ## 2. Dataset Methodology & Analysis
 
 ### 2.1 Dataset Construction
-The dataset [`data/triage_dataset.csv`](data/triage_dataset.csv) was authored as a synthetic corpus of natural language descriptions of medical emergencies, acute injuries, and routine outpatient inquiries. Rather than scraping uncurated clinical notes, sentences were hand-crafted to represent diverse colloquial speech patterns, layperson symptom descriptions (*"like an elephant sitting on my chest"*, *"throat closing"*), and clinic administrative queries (*"renew prescription"*, *"parking hours"*).
+[`data/triage_dataset.csv`](data/triage_dataset.csv) is a synthetic corpus of natural language descriptions of medical emergencies, acute injuries, and routine outpatient inquiries. Rather than scraping uncurated clinical notes, sentences were hand-crafted to represent diverse colloquial speech patterns, layperson symptom descriptions (*"like an elephant sitting on my chest"*, *"throat closing"*), and clinic administrative queries (*"renew prescription"*, *"parking hours"*).
 
 ### 2.2 Corpus Distribution & Stratification
 Following targeted dataset augmentation to resolve cardiac and traumatic ambiguity, the corpus contains **371 labeled sentences**:
 
 | Triage Class | Description | Sample Count | Percentage |
 | :--- | :--- | :---: | :---: |
-| 🔴 **RED** | Immediate life-threat / airway, breathing, circulation collapse | 133 | 35.85% |
-| 🟡 **YELLOW** | Urgent medical condition requiring care within 1 hour | 115 | 31.00% |
-| 🟢 **GREEN** | Non-urgent inquiries, routine consultations, scheduling | 123 | 33.15% |
+| **RED** | Immediate life-threat / airway, breathing, circulation collapse | 133 | 35.85% |
+| **YELLOW** | Urgent medical condition requiring care within 1 hour | 115 | 31.00% |
+| **GREEN** | Non-urgent inquiries, routine consultations, scheduling | 123 | 33.15% |
 | **Total** | | **371** | **100.0%** |
 
 The data is partitioned using a random seed (`SEED = 42`) into an **80/20 stratified train/test split**:
-- **Training Set ($N=296$)**: 106 RED, 92 YELLOW, 98 GREEN.
-- **Held-out Test Set ($N=75$)**: 27 RED, 23 YELLOW, 25 GREEN.
+- **Training Set (N=296)**: 106 RED, 92 YELLOW, 98 GREEN.
+- **Held-out Test Set (N=75)**: 27 RED, 23 YELLOW, 25 GREEN.
 
 ### 2.3 Vocabulary & Leakage Prevention
 To ensure strict absence of data leakage, the vocabulary is built **exclusively from the 296 training samples**. The vocabulary comprises **701 unique lemmatized tokens**. Out-of-vocabulary (OOV) tokens encountered at test time or during deployment are simply omitted from vector activations without breaking inference.
@@ -66,7 +66,7 @@ The V-BETS inference pipeline operates across five coordinated stages:
                                 │
                     [Tokenization & Lemmatization]
                                 │
-                    [Bag-of-Words Vector (701-d)]
+                    [Bag-of-Words Vector (701-d baseline / 865-d v4 deployed)]
                                 │
                     [Keras BoW MLP (Softmax)]
                                 │
@@ -84,18 +84,18 @@ The V-BETS inference pipeline operates across five coordinated stages:
 Voice audio is captured through the browser using the `streamlit-mic-recorder` WebRTC component at 16 kHz WAV format. Transcriptions are generated via the `SpeechRecognition` library interfacing with the Google Web Speech API. If microphone permissions are denied, audio hardware is absent, or ambient noise disrupts transcription, the interface exposes an immediate text-input fallback.
 
 ### 3.2 NLP Preprocessing Pipeline (`preprocess.py`)
-1. **Normalization**: Lowercases strings, removes extraneous whitespace, and normalizes contractions (e.g., *"won't"* $\rightarrow$ *"will not"*, *"can't"* $\rightarrow$ *"cannot"*, *"i'm"* $\rightarrow$ *"i am"*).
+1. **Normalization**: Lowercases strings, removes extraneous whitespace, and normalizes contractions (e.g., *"won't"* -> *"will not"*, *"can't"* -> *"cannot"*, *"i'm"* -> *"i am"*).
 2. **Tokenization**: Regular expression pattern matching extracts alphabetical word segments (`[a-z]+`), removing punctuation and non-lexical symbols.
-3. **Double Lemmatization**: Utilizes NLTK's `WordNetLemmatizer` with successive verb and noun passes (`_lem.lemmatize(_lem.lemmatize(w, "v"), "n")`). This collapses inflected forms (e.g., *"bleeding"* $\rightarrow$ *"bleed"*, *"vomited"* $\rightarrow$ *"vomit"*, *"babies"* $\rightarrow$ *"baby"*).
-4. **Vectorization**: Transforms preprocessed tokens into a binary multi-hot Bag-of-Words vector $\mathbf{x} \in \{0, 1\}^{701}$.
+3. **Double Lemmatization**: Utilizes NLTK's `WordNetLemmatizer` with successive verb and noun passes (`_lem.lemmatize(_lem.lemmatize(w, "v"), "n")`). This collapses inflected forms (e.g., *"bleeding"* -> *"bleed"*, *"vomited"* -> *"vomit"*, *"babies"* -> *"baby"*).
+4. **Vectorization**: Transforms preprocessed tokens into a binary multi-hot Bag-of-Words vector x in {0, 1}^701.
 
 ### 3.3 Hybrid Safety Layer & Confidence Thresholding
 To counteract the inherent vulnerability of pure statistical classifiers to severe under-triage, V-BETS wraps model inference in two safety mechanisms:
 
 1. **Red-Flag Rule Layer**: A deterministic list of emergency keywords (`RED_FLAGS`):
    `"cannot breath"`, `"not breath"`, `"unconscious"`, `"unconsious"`, `"unresponsive"`, `"not responding"`, `"heart attack"`, `"having a stroke"`, `"seizure"`, `"choking"`, `"overdose"`, `"will not stop bleeding"`, `"bleeding heavily"`, `"kill myself"`, `"end my life"`, `"suicid"`, `"no pulse"`, `"no heartbeat"`, `"turning blue"`.
-   If any red-flag phrase is matched in the normalized input, the decision is automatically escalated to **RED**, appending an explicit provenance note.
-2. **Low-Confidence Escalation**: If the model predicts **GREEN** but the maximum softmax probability falls below 50% ($\max(P) < 0.50$), the complaint is automatically bumped to **YELLOW** to prevent borderline acute cases from being triaged to routine outpatient care.
+   This is the original baseline list of emergency phrases; it was later expanded during post-audit remediation to 47 phrases across six high-acuity clinical categories (see Section 6.2). If any red-flag phrase is matched in the normalized input, the decision is automatically escalated to **RED**, appending an explicit provenance note.
+2. **Low-Confidence Escalation**: If the model predicts **GREEN** but the maximum softmax probability falls below 50% (max(P) < 0.50), the complaint is automatically bumped to **YELLOW** to prevent borderline acute cases from being triaged to routine outpatient care.
 
 ---
 
@@ -110,13 +110,15 @@ Designed for sub-millisecond CPU inference and zero footprint overhead:
 | :---: | :--- | :---: | :---: | :--- |
 | 1 | Input | `(None, 701)` | 0 | Binary multi-hot BoW vector |
 | 2 | Dense | `(None, 64)` | 44,928 | ReLU |
-| 3 | Dropout | `(None, 64)` | 0 | $p = 0.50$ |
+| 3 | Dropout | `(None, 64)` | 0 | p = 0.50 |
 | 4 | Dense | `(None, 32)` | 2,080 | ReLU |
-| 5 | Dropout | `(None, 32)` | 0 | $p = 0.30$ |
+| 5 | Dropout | `(None, 32)` | 0 | p = 0.30 |
 | 6 | Dense (Output) | `(None, 3)` | 99 | Softmax |
 | **Total** | | | **47,107** | **File size: 595 KB (0.57 MB)** |
 
-- **Optimization**: Adam ($\beta_1=0.9, \beta_2=0.999$), loss: sparse categorical cross-entropy.
+*(Note: The deployed production Model v4 incorporates 865 vocabulary dimensions including negation features, yielding 57,603 total parameters and a model file size of 721 KB [0.69 MB]; see Section 6 for full v4 details).*
+
+- **Optimization**: Adam (beta_1=0.9, beta_2=0.999), loss: sparse categorical cross-entropy.
 - **Regularization**: Balanced class weights (`cw`), EarlyStopping on validation loss (patience 15 epochs, best weights restored), batch size: 16.
 
 ### 4.2 Model B: Sequence Embedding Model (Comparative Benchmark)
@@ -125,10 +127,10 @@ Evaluates whether word-order sequence representations outperform sparse multi-ho
 | Layer | Type | Output Shape | Parameters | Activation / Details |
 | :---: | :--- | :---: | :---: | :--- |
 | 1 | Input | `(None, 30)` | 0 | Integer sequence (padded/truncated) |
-| 2 | Embedding | `(None, 30, 32)` | 22,464 | Vocab size $702 \times 32$ |
+| 2 | Embedding | `(None, 30, 32)` | 22,464 | Vocab size 702 x 32 |
 | 3 | GlobalAvgPool1D | `(None, 32)` | 0 | Temporal average pooling |
 | 4 | Dense | `(None, 32)` | 1,056 | ReLU |
-| 5 | Dropout | `(None, 32)` | 0 | $p = 0.40$ |
+| 5 | Dropout | `(None, 32)` | 0 | p = 0.40 |
 | 6 | Dense (Output) | `(None, 3)` | 99 | Softmax |
 | **Total** | | | **23,619** | Benchmark comparison model |
 
@@ -138,7 +140,7 @@ Evaluates whether word-order sequence representations outperform sparse multi-ho
 
 *All metrics and numbers reported in Sections 5.1 and 5.2 are initial prototype development values extracted directly from the baseline system logs (`reports/train_run1.txt`, `reports/train_run2.txt`, `reports/unseen_eval_run2b.txt`, and `model/metrics.json`). For audited and multi-seed evaluated metrics across subsequent model iterations (v1–v4), see Section 6.*
 
-### 5.1 Held-Out Test Set Performance ($N=75$)
+### 5.1 Held-Out Test Set Performance (N=75)
 
 ```
 === BoW MLP Confusion Matrix (Held-out N=75) ===
@@ -165,7 +167,7 @@ The Embedding Model achieved higher held-out accuracy (93.33% vs 90.67%) due to 
 
 ---
 
-### 5.2 Independent Unseen Test Set Evaluation ($N=45$)
+### 5.2 Independent Unseen Test Set Evaluation (N=45)
 
 Testing against the out-of-distribution evaluation set demonstrates the concrete clinical benefit of the hybrid rule layer:
 
@@ -194,57 +196,78 @@ True GREEN           1                 2                12
 
 Analyzing individual failure cases exposes the mechanical realities of bag-of-words text classification:
 
-1. **Failure of Negation Scope (Sample #45)**:
-   - *Text*: `"i spent the weekend gardening and my lower back feels stiff and achy when i bend down but i have no shooting pain numbness or weakness in my legs"`
-   - *True Label*: **GREEN** | *Predicted*: **YELLOW** ($P(\text{YELLOW})=0.9130$).
-   - *Analysis*: In Bag-of-Words, word order is discarded. The presence of *no* cannot grammatically bind to *shooting*, *pain*, *numbness*, and *weakness*. The model detects four acute neurological/pain tokens and incorrectly flags the complaint as urgent.
-2. **Lexical Keyword Conflation (Sample #32)**:
-   - *Text*: `"hello i need to get my monthly maintenance blood pressure medication refilled because my bottle has only two pills left"`
-   - *True Label*: **GREEN** | *Predicted*: **RED** ($P(\text{RED})=0.9650$).
-   - *Analysis*: Because training sentences added for overdose included *"drank a bottle of pills"* and *"prescription sleeping medication"*, the tokens *bottle* and *medication* acquired strong positive weights in the RED output neuron, pulling an administrative refill query into emergency escalation.
-3. **The Lifesaving Rule Override (Sample #13)**:
-   - *Text*: `"my brother was working on electrical wiring in the garage and took a high voltage shock he fell backward and is completely limp with no heartbeat that i can feel"`
-   - *True Label*: **RED** | *Model Alone*: **YELLOW** ($P(\text{YELLOW})=0.7967$) | *Production Pipeline*: **RED**.
-   - *Analysis*: Because words like *fell*, *backward*, and *garage* are heavily correlated with orthopedic injuries in the training corpus, the raw neural network suffered a life-threatening under-triage error. However, the deterministic rule layer intercepted `"no heartbeat"` and instantly forced an override to RED.
+#### Case 1: Failure of Negation Scope (Sample #45)
+- Text: `"i spent the weekend gardening and my lower back feels stiff and achy when i bend down but i have no shooting pain numbness or weakness in my legs"`
+- True Label: GREEN | Predicted: YELLOW (P(YELLOW)=0.9130)
+
+In Bag-of-Words representations, word order is discarded. The presence of *no* cannot grammatically bind to *shooting*, *pain*, *numbness*, and *weakness*. The model detects four acute neurological/pain tokens and flags the complaint as urgent.
+
+#### Case 2: Lexical Keyword Conflation (Sample #32)
+- Text: `"hello i need to get my monthly maintenance blood pressure medication refilled because my bottle has only two pills left"`
+- True Label: GREEN | Predicted: RED (P(RED)=0.9650)
+
+Because training sentences added for overdose included *"drank a bottle of pills"* and *"prescription sleeping medication"*, the tokens *bottle* and *medication* acquired strong positive weights in the RED output neuron, pulling an administrative refill query into emergency escalation.
+
+#### Case 3: The Lifesaving Rule Override (Sample #13)
+- Text: `"my brother was working on electrical wiring in the garage and took a high voltage shock he fell backward and is completely limp with no heartbeat that i can feel"`
+- True Label: RED | Model Alone: YELLOW (P(YELLOW)=0.7967) | Production Pipeline: RED
+
+Because words like *fell*, *backward*, and *garage* are heavily correlated with orthopedic injuries in the training corpus, the raw neural network suffered a life-threatening under-triage error. However, the deterministic rule layer intercepted `"no heartbeat"` and instantly forced an override to RED.
 
 ---
 
 ## 6. Post-Audit Remediation and Model Evolution
 
 ### 6.1 Independent Audit Summary
-An independent audit of the initial V-BETS codebase and evaluation results (`reports/final_reevaluation.txt`, `reports/unseen_eval_v2.txt`) identified key safety and architectural vulnerabilities: incomplete coverage within the original 18-phrase `RED_FLAGS` list, a complete lack of negation handling in both the Bag-of-Words vectorizer and the phrase rules, an asymmetric confidence escalation policy that caught low-confidence GREEN predictions but ignored low-confidence YELLOW predictions, and missing operational safeguards including unhandled speech service timeouts, lack of persistent decision audit logging, and incomplete medical disclaimer disclosures regarding vital-sign assessments.
+An independent audit of the initial V-BETS codebase and evaluation results (`reports/final_reevaluation.txt`, `reports/unseen_eval_v2.txt`) identified key safety and architectural vulnerabilities: incomplete coverage within the original 19-phrase `RED_FLAGS` list, a complete lack of negation handling in both the Bag-of-Words vectorizer and the phrase rules, an asymmetric confidence escalation policy that caught low-confidence GREEN predictions but ignored low-confidence YELLOW predictions, and missing operational safeguards including unhandled speech service timeouts, lack of persistent decision audit logging, and incomplete medical disclaimer disclosures regarding vital-sign assessments.
 
 ### 6.2 Initial Remediation (Fixes 1–4)
+
 To resolve these audit findings, four systematic remediations were engineered:
-1. **Fix 1 (Expanded Emergency Phrase Rules)**: The reviewed emergency list in `safety_rules.py` was expanded from 18 phrases to 47 targeted phrases across six high-acuity categories: acute chest pain, respiratory compromise, stroke presentation, anaphylaxis, severe hemorrhage, overdose, and suicidality. A 5-token negation window was introduced (`matched_red_flag`), ensuring phrases preceded by explicit negation cues (e.g., *"denies chest pain"*) do not force RED escalation, while preserving inherent emergency wording (e.g., *"cannot breathe"*).
-2. **Fix 2 (Negation-Aware Preprocessing & Retrained Model v2)**: The preprocessing pipeline in `preprocess.py` was enhanced to prepend a `NEG_` prefix to tokens appearing within a 3-token window following negation cues (`no`, `not`, `never`, `without`, `denies`, `cannot`). Model v2 was trained on the 296 training rows with this 749-dimensional vocabulary (`model/vocab_v2.json`, `model/metrics_v2.json`), raising held-out accuracy from 90.67% to 93.33% (`model/metrics_v2.json`).
-3. **Fix 3 (Symmetric Confidence Escalation & Sample-Specific Disclosures)**: In `triage.py`, confidence escalation was made fully symmetric: low-confidence GREEN predictions ($\max(P) < 0.50$) escalate to YELLOW, and low-confidence YELLOW predictions ($\max(P) < 0.50$) escalate to RED. In addition, two specific keyword rules were introduced: `routine_prescription_request` (mapping phrases like *"medication refilled"* to GREEN) and `negated_mild_gardening_back_complaint` (mapping mild back pain with negated radicular symptoms to GREEN). **Explicit Disclosure**: These two rules were narrowly scoped fixes engineered to reverse the exact known misclassifications of Sample #32 and Sample #45 on the contaminated unseen set, not general model improvements. An ablation study toggling `ENABLE_TARGETED_FIXES=false` (`reports/final_reevaluation.txt`) confirmed that without these targeted overrides, the underlying model and general rules still fail on both cases (Sample #32 misclassifies as RED with $P(\text{RED})=0.8131$, and Sample #45 misclassifies as YELLOW with $P(\text{YELLOW})=0.9743$), reducing unseen accuracy from 95.56% to 91.11%.
-4. **Fix 4 (Operational Safeguards & Clinical Transparency)**: In `operational.py` and `app.py`, explicit timeout handling was implemented for Web Speech API failures, input validation was enforced via `is_usable_transcript` (requiring $\ge 2$ normalized tokens to reject uninterpretable transcripts), immutable audit logging was added to write every decision event to `logs/decisions.jsonl`, and the on-screen disclaimer was updated to explicitly warn that the prototype does not assess vital signs (blood pressure, oxygen saturation, heart rate, or temperature).
+
+Fix 1 (Expanded Emergency Phrase Rules): The reviewed emergency list in `safety_rules.py` was expanded from the original 19 phrases to 60 targeted phrases (41 newly engineered phrases across seven high-acuity categories: acute chest pain, respiratory compromise, stroke presentation, anaphylaxis, severe hemorrhage, overdose, and suicidality). A 5-token negation window was introduced (`matched_red_flag`), ensuring phrases preceded by explicit negation cues (e.g., *"denies chest pain"*) do not force RED escalation, while preserving inherent emergency wording (e.g., *"cannot breathe"*).
+
+Fix 2 (Negation-Aware Preprocessing & Retrained Model v2): The preprocessing pipeline in `preprocess.py` was enhanced to prepend a `NEG_` prefix to tokens appearing within a 3-token window following negation cues (`no`, `not`, `never`, `without`, `denies`, `cannot`). Model v2 was trained on the 296 training rows with this 749-dimensional vocabulary (`model/vocab_v2.json`, `model/metrics_v2.json`), raising held-out accuracy from 90.67% to 93.33% (`model/metrics_v2.json`).
+
+Fix 3 (Symmetric Confidence Escalation & Sample-Specific Disclosures): In `triage.py`, confidence escalation was made fully symmetric: low-confidence GREEN predictions (max(P) < 0.50) escalate to YELLOW, and low-confidence YELLOW predictions (max(P) < 0.50) escalate to RED. In addition, two specific keyword rules were introduced: `routine_prescription_request` (mapping phrases like *"medication refilled"* to GREEN) and `negated_mild_gardening_back_complaint` (mapping mild back pain with negated radicular symptoms to GREEN). **Explicit Disclosure**: These two rules were narrowly scoped fixes engineered to reverse the exact known misclassifications of Sample #32 and Sample #45 on the contaminated unseen set, not general model improvements. An ablation study toggling `ENABLE_TARGETED_FIXES=false` (`reports/final_reevaluation.txt`) confirmed that without these targeted overrides, the underlying model and general rules still fail on both cases (Sample #32 misclassifies as RED with P(RED)=0.8131, and Sample #45 misclassifies as YELLOW with P(YELLOW)=0.9743), reducing unseen accuracy from 95.56% to 91.11%.
+
+Fix 4 (Operational Safeguards & Clinical Transparency): In `operational.py` and `app.py`, explicit timeout handling was implemented for Web Speech API failures, input validation was enforced via `is_usable_transcript` (requiring >= 2 normalized tokens to reject uninterpretable transcripts), immutable audit logging was added to write every decision event to `logs/decisions.jsonl`, and the on-screen disclaimer was updated to explicitly warn that the prototype does not assess vital signs (blood pressure, oxygen saturation, heart rate, or temperature).
 
 ### 6.3 Data Augmentation, Round 1 (Model v3)
-To assess whether targeted training data expansion could eliminate reliance on hardcoded sample-specific rules, 36 synthetic sentences were generated (16 RED, 10 YELLOW, 10 GREEN), expanding training data to 332 rows (`model/metrics_v3.json`, `reports/train_run2.txt`). A strict programmatic similarity audit confirmed that zero added sentences were near-duplicates of held-out or unseen sets (`reports/v3_similarity_audit.txt`). 
+To assess whether targeted training data expansion could eliminate reliance on hardcoded sample-specific rules, 36 synthetic sentences were generated (16 RED, 10 YELLOW, 10 GREEN), expanding training data to 332 rows (`model/metrics_v3.json`, `reports/full_methodology_summary.txt`). A strict programmatic similarity audit confirmed that zero added sentences were near-duplicates of held-out or unseen sets (`reports/v3_similarity_audit.txt`). 
 
-When evaluated on the held-out set (`reports/v3_augmentation_eval.txt`), Model v3 with general rules (Config B) improved RED recall from 25/27 (92.6%, 95% CI [75.7%, 99.1%]) to 27/27 (100.0%, 95% CI [87.2%, 100.0%]), with overall accuracy rising from 93.3% to 96.0%. However, evaluation on the contaminated unseen set revealed an acute clinical regression: unseen RED recall dropped from 15/15 (100.0%, 95% CI [78.2%, 100.0%]) in v2 to 14/15 (93.3%, 95% CI [68.1%, 99.8%]) in v3 due to the under-triage of Sample #10 (*"i had a massive coughing fit and brought up a cupful of dark red clotted blood and now i feel lightheaded and breathless"*), which was misclassified as YELLOW with $P(\text{YELLOW})=0.6275$ (`reports/v3_augmentation_eval.txt`). A leave-one-category-out ablation study omitting individual subsets of augmented data failed to isolate any single category as the cause, indicating complex feature weight redistribution across the bag-of-words representation (`reports/v4_diagnosis.txt`).
+When evaluated on the held-out set (`reports/v3_augmentation_eval.txt`), Model v3 with general rules (Config B) improved RED recall from 25/27 (92.6%, 95% CI [75.7%, 99.1%]) to 27/27 (100.0%, 95% CI [87.2%, 100.0%]), with overall accuracy rising from 93.3% to 96.0%. However, evaluation on the contaminated unseen set revealed an acute clinical regression: unseen RED recall dropped from 15/15 (100.0%, 95% CI [78.2%, 100.0%]) in v2 to 14/15 (93.3%, 95% CI [68.1%, 99.8%]) in v3 due to the under-triage of Sample #10 (*"i had a massive coughing fit and brought up a cupful of dark red clotted blood and now i feel lightheaded and breathless"*), which was misclassified as YELLOW with P(YELLOW)=0.6275 (`reports/v3_augmentation_eval.txt`). A leave-one-category-out ablation study omitting individual subsets of augmented data failed to isolate any single category as the cause, indicating complex feature weight redistribution across the bag-of-words representation (`reports/v4_diagnosis.txt`).
 
 ### 6.4 Diagnostic Analysis & Data Augmentation, Round 2 (Model v4)
-To diagnose the instability observed in Sample #10, an initialization-seed ablation was conducted across 10 distinct random initialization seeds (`reports/v4_diagnosis.txt`, `reports/v4_conclusions.txt`). The results showed that Sample #10 prediction was fundamentally unstable across initialization runs for all model versions: raw Model v2 recovered Sample #10 as RED in 6 of 10 seeds, Model v3 in only 2 of 10 seeds, and Model v4 in 3 of 10 seeds (`reports/v4_conclusions.txt`). This demonstrated that the regression was largely driven by optimization and seed-level initialization instability on a small corpus rather than an easily remediated data gap.
+To diagnose the instability observed in Sample #10, an initialization-seed ablation was conducted across 10 distinct random initialization seeds (`reports/v4_diagnosis.txt`, `reports/v4_conclusions.txt`). The results showed that Sample #10 prediction was fundamentally unstable across initialization runs for all model versions: raw Model v2 recovered Sample #10 as RED in 6 of 10 seeds, Model v3 in only 2 of 10 seeds, and Model v4 in 3 of 5 seeds (`reports/v4_evaluation.txt`, `reports/v4_conclusions.txt`). This demonstrated that the regression was largely driven by optimization and seed-level initialization instability on a small corpus rather than an easily remediated data gap.
 
-To reinforce acute respiratory bleeding representation and correct class shrinkage in the urgent category, a second round of 24 synthetic sentences was added (12 RED presentations featuring severe hemoptysis and clotted bleeding, and 12 YELLOW acute presentations), yielding a total training set of 356 rows (`model/metrics_v4.json`, `reports/v4_data_note.txt`). The v4 similarity audit confirmed zero duplicate contamination (`reports/v4_similarity_audit.txt`). At initialization seed 42, Model v4 restored Sample #10 to RED ($P(\text{RED})=0.7269$) and achieved 15/15 RED recall (100.0%, 95% CI [78.2%, 100.0%]) on the contaminated unseen set under Config B (`reports/v4_evaluation.txt`).
+To reinforce acute respiratory bleeding representation and correct class shrinkage in the urgent category, a second round of 24 synthetic sentences was added (12 RED presentations featuring severe hemoptysis and clotted bleeding, and 12 YELLOW acute presentations), yielding a total training set of 356 rows (`model/metrics_v4.json`, `reports/v4_data_note.txt`). The v4 similarity audit confirmed zero duplicate contamination (`reports/v4_similarity_audit.txt`). At initialization seed 42, Model v4 restored Sample #10 to RED (P(RED)=0.7269) and achieved 15/15 RED recall (100.0%, 95% CI [78.2%, 100.0%]) on the contaminated unseen set under Config B (`reports/v4_evaluation.txt`).
 
 ### 6.5 Pre-Registered Model Selection and Final Evaluation
 Because `data/unseen_test.csv` had been repeatedly evaluated during error diagnosis and rule tuning, it was formally declared contaminated (`reports/v3_augmentation_eval.txt`). To prevent p-hacking and selective reporting, an objective model selection rule was committed in `reports/model_selection_rule.txt` prior to inspecting or evaluating a completely fresh, untouched test set (`data/unseen_test_v2.csv`):
-1. Candidate models (v2, v3, v4) were evaluated across five initialization seeds on the contaminated unseen set; any model with a true-RED row misclassified in $\ge 60\%$ (3 of 5) seeds was disqualified.
+1. Candidate models (v2, v3, v4) were evaluated across five initialization seeds on the contaminated unseen set; any model with a true-RED row misclassified in at least 3 of 5 seeds was disqualified.
 2. Among eligible models, the candidate with the highest mean Config B RED recall across stratified train/test split seeds was selected.
 
-Under this rule, Model v2 and Model v3 were disqualified because both repeatedly missed Sample #10 across initialization runs (3/5 and 4/5 misses respectively, `reports/model_selection_rule.txt`). Model v4 was eligible (zero repeated true-RED misses $\ge 3/5$) and demonstrated the highest mean Config B RED recall across split seeds (93.5% vs v3's 92.6% and v2's 91.7%, `reports/v4_evaluation.txt`), and was officially selected as the deployed model.
+Under this rule, Model v2 and Model v3 were disqualified because both repeatedly missed Sample #10 across initialization runs (3/5 and 4/5 misses respectively, `reports/model_selection_rule.txt`). Model v4 was eligible (zero repeated true-RED misses in at least 3 of 5 seeds) and demonstrated the highest mean Config B RED recall across split seeds (93.5% vs v3's 92.6% and v2's 91.7%, `reports/v4_evaluation.txt`), and was officially selected as the deployed model.
 
-The final evaluation was conducted exactly once against the untouched fresh test set `data/unseen_test_v2.csv` ($N=30$, 10 RED, 10 YELLOW, 10 GREEN; `reports/v4_final_fresh_evaluation.txt`). Deployed Model v4 and baseline Model v2 performed identically across all configurations:
+The final evaluation was conducted exactly once against the untouched fresh test set `data/unseen_test_v2.csv` (N=30, 10 RED, 10 YELLOW, 10 GREEN; `reports/v4_final_fresh_evaluation.txt`). Deployed Model v4 and baseline Model v2 performed identically across all configurations:
 - **Selected Model v4**: 10/10 RED recall (100.0%, 95% Clopper-Pearson CI [69.2%, 100.0%]), 30/30 overall accuracy (100.0%).
 - **Baseline Model v2**: 10/10 RED recall (100.0%, 95% Clopper-Pearson CI [69.2%, 100.0%]), 30/30 overall accuracy (100.0%).
 
 Crucially, this result demonstrates that two rounds of dataset augmentation did not yield a measurably superior classifier on an independent sample; Model v4 was selected through a pre-registered rule whose tie-breaking criteria reflected initialization noise rather than genuine generalization gains. Furthermore, because the fresh test set comprises 10 cases per class, the resulting 95% confidence interval for RED recall is exceptionally wide (spanning 30.8 percentage points from 69.2% to 100.0%), meaning that this evaluation cannot statistically confirm superiority or rule out a meaningful performance divergence in real-world distributions (`reports/v4_final_fresh_evaluation.txt`, `reports/v4_conclusions.txt`).
 
-### 6.6 Methodological Insights & System Safety Architecture
+### 6.6 Consolidated Model Evolution Summary
+
+The progression across all model iterations, training volumes, vocabularies, and evaluation sets is synthesized below:
+
+| Model Iteration | Training Rows | Vocabulary Dimension | Held-Out RED Recall (95% CI) | Held-Out Accuracy | Unseen RED Recall (95% CI) | Fresh-Set RED Recall (95% CI) | Methodological Notes & Key Findings |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **v1 (Baseline Prototype)** | 296 | 701-d | 24/27 (88.9%; [70.8%, 97.7%]) | 90.7% | 15/15 (100.0%; [78.2%, 100.0%]) | *Not evaluated* | Original BoW MLP baseline with legacy 19 phrase rules and asymmetric escalation; lacks negation handling. |
+| **v2 (Negation Features)** | 296 | 749-d | 25/27 (92.6%; [75.7%, 99.1%]) | 93.3% | 15/15 (100.0%; [78.2%, 100.0%]) | 10/10 (100.0%; [69.2%, 100.0%]) | Added windowed negation tokens (`NEG_*`), expanded reviewed `RED_FLAGS` (60 phrases across 7 categories), symmetric escalation, and audit logging. |
+| **v3 (Augmentation Round 1)** | 332 | 835-d | 27/27 (100.0%; [87.2%, 100.0%]) | 96.0% | 14/15 (93.3%; [68.1%, 99.8%]) | *Not evaluated* | 36 synthetic rows added; resolved held-out RED misses (Config B) but regressed on unseen Sample #10 (coughing clotted blood); excluded by pre-registered rule. |
+| **v4 (Deployed Model)** | 356 | 865-d | 25/27 (92.6%; [75.7%, 99.1%]) | 94.7% | 15/15 (100.0%; [78.2%, 100.0%]) | 10/10 (100.0%; [69.2%, 100.0%]) | **Deployed Model.** Selected via pre-registered rule (mean split-seed Config B recall 93.5%); 24 rows added for bleeding/YELLOW rebalancing; identical 10/10 RED recall to v2 on fresh test set. |
+
+### 6.7 Methodological Insights & System Safety Architecture
 The model evolution trajectory of V-BETS illustrates several foundational lessons for applied medical NLP:
 1. **The Fallacy of Contaminated Holdouts**: Repeatedly inspecting and optimizing models against the same evaluation set produces an illusion of steady progress that often masks seed instability and narrow pattern overfitting. Pre-registration and uncorrupted holdout sets are mandatory to obtain an uncorrupted and honest assessment.
 2. **The Primacy of Deterministic Safety Nets**: Across every iteration (v1 through v4), the shallow neural classifier alone exhibited latent vulnerabilities to keyword conflation and syntactic variation. In contrast, the deterministic safety layer (`RED_FLAGS` phrase matching and symmetric confidence escalation) consistently intercepted severe clinical presentations that the statistical model missed. In safety-critical clinical triage, deterministic policy rules are not merely supplementary heuristics—they form the core safety mechanism of the system.
@@ -255,26 +278,30 @@ The model evolution trajectory of V-BETS illustrates several foundational lesson
 
 V-BETS is packaged as a cloud-ready Streamlit web service hosted on Streamlit Community Cloud.
 
-```mermaid
-graph TD
-    User([User Voice or Typed Input]) --> UI[Streamlit Web Frontend]
-    UI -->|Record Voice| Mic[streamlit-mic-recorder WebRTC]
-    UI -->|Direct Text| Fallback[Text Input Fallback]
-    Mic -->|WAV Bytes| SR[SpeechRecognition + Google Speech API]
-    SR --> Text[Transcribed Complaint]
-    Fallback --> Text
-    Text --> Preprocess[Tokenization & Lemmatization]
-    Preprocess --> BoW[701-d BoW Vector]
-    BoW --> Keras[Keras BoW MLP]
-    Keras --> Probs[Softmax Class Probabilities]
-    Text --> RuleCheck{Red-Flag Phrase Detected?}
-    RuleCheck -->|Yes| ForceRed[Force RED Escalation]
-    RuleCheck -->|No| ConfCheck{Prob < 0.50 & GREEN?}
-    ConfCheck -->|Yes| BumpYellow[Escalate to YELLOW]
-    ConfCheck -->|No| Output[Final Category Display]
-    ForceRed --> Output
-    BumpYellow --> Output
-    Output --> UI
+```
+[User Input (Voice via Mic or Direct Text Fallback)]
+                         │
+                         ▼
+           [Web Speech API / Direct Text]
+                         │
+                         ▼
+        [Text Preprocessing & Bag-of-Words]
+                         │
+                         ▼
+            [Keras MLP Neural Classifier]
+                         │
+                         ▼
+            [Softmax Class Probabilities]
+                         │
+         ┌───────────────┴───────────────┐
+         ▼                               ▼
+[Deterministic Overrides]      [Confidence Escalation]
+  (RED_FLAGS Match -> RED)       (Low Conf -> Bump Priority)
+         │                               │
+         └───────────────┬───────────────┘
+                         ▼
+             [Final Triage Category]
+           (RED / YELLOW / GREEN + UI Alert)
 ```
 
 - **GitHub Repository**: [https://github.com/thyakeshwarsk2023/vbets](https://github.com/thyakeshwarsk2023/vbets)
@@ -290,7 +317,7 @@ graph TD
 2. **Synthetic Data Constraints**:
    The dataset consists of 371 synthetic sentences. While sufficient for proof-of-concept modeling, real-world emergency presentations involve disfluency, ambient background noise (ambulances, shouting), thick regional accents, and fragmented speech that degrade speech-to-text accuracy.
 3. **Missing Clinical Covariates**:
-   In actual emergency medicine, triage cannot be performed responsibly on text alone. Objective vital signs (systolic blood pressure, oxygen saturation $SpO_2$, heart rate, respiratory rate, and body temperature) are essential for determining physiological stability.
+   In actual emergency medicine, triage cannot be performed responsibly on text alone. Objective vital signs (systolic blood pressure, oxygen saturation SpO2, heart rate, respiratory rate, and body temperature) are essential for determining physiological stability.
 4. **Monolingual Limitation**:
    The current implementation is restricted to English. In emergency settings, multilingual support (or automated translation) is vital.
 5. **Regulatory & Non-Medical Device Notice**:
@@ -302,4 +329,4 @@ graph TD
 
 V-BETS demonstrates that a lightweight neural network (under 600 KB) combined with classical NLP lemmatization can provide real-time categorization of patient emergency descriptions. However, the study's central finding is that **pure statistical machine learning models should not operate unconstrained in high-stakes clinical triage**. 
 
-The final deployed model is Model v4, selected via an objective pre-registered rule, whose performance on an independent fresh test set ($N=30$, 10/10 RED recall, 95% CI [69.2%, 100.0%]) proved statistically indistinguishable from the earlier Model v2. In initial development on the original 45-sample evaluation set, pairing an empirical Bag-of-Words MLP with a deterministic red-flag safety net and low-confidence escalation logic similarly mitigated high-acuity under-triage failures, raising RED recall from 93.33% (14/15; 95% CI [68.05%, 99.83%]) to 100.00% (15/15; 95% CI [78.20%, 100.00%]). Across all evaluations, this hybrid architecture highlights a practical path forward for AI decision-support tools: statistical models provide flexible classification, while deterministic rule layers safeguard patient safety.
+The final deployed model is Model v4, selected via an objective pre-registered rule, whose performance on an independent fresh test set (N=30, 10/10 RED recall, 95% CI [69.2%, 100.0%]) proved statistically indistinguishable from the earlier Model v2. In initial development on the original 45-sample evaluation set, pairing an empirical Bag-of-Words MLP with a deterministic red-flag safety net and low-confidence escalation logic similarly mitigated high-acuity under-triage failures, raising RED recall from 93.33% (14/15; 95% CI [68.05%, 99.83%]) to 100.00% (15/15; 95% CI [78.20%, 100.00%]). Across all evaluations, this hybrid architecture highlights a practical path forward for AI decision-support tools: statistical models provide flexible classification, while deterministic rule layers safeguard patient safety.
